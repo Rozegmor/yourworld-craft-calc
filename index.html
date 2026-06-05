@@ -446,10 +446,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .ic-price svg{width:9px;height:9px;opacity:.7}
 .res-price{font-size:9px;color:#eab308;opacity:.7;margin-left:4px;white-space:nowrap}
 .modal-price{font-size:10px;color:#eab308;opacity:.7;margin-left:auto;white-space:nowrap;padding-left:8px}
-.craft-total-price{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.15);border-radius:8px;margin-bottom:10px;font-size:12px}
-.craft-total-price .ctp-label{color:var(--text2);flex:1}
-.craft-total-price .ctp-value{color:#f59e0b;font-weight:700;display:flex;align-items:center;gap:4px}
-.craft-total-price .ctp-value svg{width:14px;height:14px;opacity:.8}
+.craft-total-price{display:flex;align-items:center;gap:4px;padding:4px 8px;background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.15);border-radius:6px;margin-bottom:8px;font-size:10px}
+.craft-total-price .ctp-label{color:var(--text2);flex:1;font-size:10px}
+.craft-total-price .ctp-value{color:#f59e0b;font-weight:600;display:flex;align-items:center;gap:3px;font-size:11px}
+.craft-total-price .ctp-value svg{width:11px;height:11px;opacity:.8}
 
 .changelog-btn{font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;white-space:nowrap;cursor:pointer;transition:all .2s;border:none;display:flex;align-items:center;gap:3px}
 .changelog-btn:hover{color:var(--accent);background:var(--bg3)}
@@ -739,7 +739,7 @@ html.light *{scrollbar-color:var(--border) transparent}
 <a class="header-title" href="https://wiki-yourworld.ru/craft/" target="_blank">YourWorld <span>Крафт-калькулятор</span></a>
 <div class="header-badge" id="headerBadge" title="Рецептов в калькуляторе"></div>
 <button class="stats-btn" id="statsBtn" title="Статистика"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></button>
-<div class="desktop-menu" id="desktopMenu"><button class="desktop-menu-btn" id="desktopMenuBtn" title="Меню">⋮</button><div class="desktop-menu-dropdown"><div class="desktop-menu-item" id="desktopMenuChangelog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Список изменений (v1.3)</span></div><div class="desktop-menu-item" id="desktopMenuTheme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><span>Сменить тему</span></div><a class="desktop-menu-item" href="https://discord.com/users/thisiseazzy" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg><span>Баг / Предложение</span></a><div class="desktop-menu-item" id="desktopMenuDonate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg><span>Поддержать донатом</span></div></div></div>
+<div class="desktop-menu" id="desktopMenu"><button class="desktop-menu-btn" id="desktopMenuBtn" title="Меню">⋮</button><div class="desktop-menu-dropdown"><div class="desktop-menu-item" id="desktopMenuChangelog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Список изменений (v1.4)</span></div><div class="desktop-menu-item" id="desktopMenuTheme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><span>Сменить тему</span></div><a class="desktop-menu-item" href="https://discord.com/users/thisiseazzy" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg><span>Баг / Предложение</span></a><div class="desktop-menu-item" id="desktopMenuDonate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg><span>Поддержать донатом</span></div></div></div>
 <button class="inv-modal-btn" id="invModalBtn" title="Инвентарь">🎒</button>
 <div class="price-mode-toggle" id="priceModeToggle" title="Режим цен">
 <button class="price-mode-btn" data-mode="scrap">Скрап</button>
@@ -783,6 +783,18 @@ html.light *{scrollbar-color:var(--border) transparent}
 <button class="changelog-close" id="changelogClose">&#10005;</button>
 </div>
 <div class="changelog-body">
+<div class="changelog-version">
+<div class="changelog-ver-title">v1.4 <span>— 6 июня 2026</span></div>
+<ul class="changelog-items">
+<li class="new">Переключатель цен: режим «Скрап» и режим «Рынок» — выбирайте удобный формат отображения стоимости</li>
+<li class="fix">Рыночные цены обновлены по актуальным данным торговцев</li>
+<li class="fix">Цена брусков скорректирована: 2кк вместо 5кк</li>
+<li class="fix">Переключатель цен теперь мгновенно обновляет все цены на странице</li>
+<li class="fix">Визуал переключателя цен приведён к единому стилю</li>
+<li class="fix">Блок «Общая стоимость» стал компактнее — не занимает лишнее место</li>
+</ul>
+</div>
+
 <div class="changelog-version">
 <div class="changelog-ver-title">v1.3 <span>— 5 июня 2026</span></div>
 <ul class="changelog-items">
@@ -887,8 +899,8 @@ const SCRAP_PRICES={
 "Швейный набор":34,
 // === СВАРОЧНЫЙ АППАРАТ (2кк → 13.33 → 14) ===
 "Сварочный аппарат":14,
-// === БРУСКИ МЕТАЛЛОВ (5кк → 33.33 → 34) ===
-"Брусок металла":34,"Брусок лития":34,"Брусок алюминия":34,"Брусок меди":34,"Брусок золота":34,
+// === БРУСКИ МЕТАЛЛОВ (2кк → 13.33 → 14) ===
+"Брусок металла":14,"Брусок лития":14,"Брусок алюминия":14,"Брусок меди":14,"Брусок золота":14,
 // === БРОНЕПЛАСТИНЫ ===
 "Бронепластина 1 уровня":4, // 500к → 3.33 → 4
 "Бронепластина 2 уровня":10, // 1.5кк → 10
@@ -1009,7 +1021,7 @@ const MARKET_PRICES={
 "Бронепластина 4 уровня":3500000,"Бронепластина 5 уровня":4500000,
 "Бронепластина Immortal":10000000,
 // === БРУСКИ ===
-"Брусок металла":5000000,"Брусок лития":5000000,"Брусок алюминия":5000000,"Брусок меди":5000000,"Брусок золота":5000000,
+"Брусок металла":2000000,"Брусок лития":2000000,"Брусок алюминия":2000000,"Брусок меди":2000000,"Брусок золота":2000000,
 // === ЧЕРТЕЖИ ===
 "Чертеж фильтра":1000000,"Чертеж глушителя":2000000,"Чертеж электроники":10000000,
 "Чертеж патронов":5000000,"Чертеж рюкзака":9000000,"Чертеж бочки":6000000,
