@@ -695,10 +695,10 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
 .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ===== PRICE MODE TOGGLE ===== */
-.price-mode-toggle{display:inline-flex;align-items:center;gap:0;border-radius:8px;border:1px solid var(--bg3);background:var(--bg2);overflow:hidden;flex-shrink:0;height:24px}
-.price-mode-btn{padding:2px 8px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text3);transition:all .2s;white-space:nowrap}
-.price-mode-btn.active{background:var(--accent);color:#fff}
-.price-mode-btn:hover:not(.active){color:var(--text)}
+.price-mode-toggle{display:inline-flex;align-items:center;border-radius:6px;border:1px solid var(--bg3);background:var(--bg);overflow:hidden;flex-shrink:0;height:26px}
+.price-mode-btn{padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--bg2);color:var(--text3);transition:all .2s;white-space:nowrap;line-height:1}
+.price-mode-btn.active{background:var(--accent);color:#fff;border-radius:5px}
+.price-mode-btn:hover:not(.active){color:var(--text);background:var(--bg3)}
 
 /* ===== LIGHT THEME ===== */
 html.light{--bg:#d4d5d8;--bg2:#dfdde0;--bg3:#c4c2c6;--border:#a8a6ab;--text:#1c1c22;--text2:#3d3d45;--text3:#63636c;--accent:#e06510;--accent-hover:#c85a0e;--green:#15803d;--red:#b91c1c}
@@ -3073,9 +3073,10 @@ updatePriceModeUI();
 btns.forEach(function(b){
 b.addEventListener('click',function(){
 state.priceMode=b.dataset.mode;
+_scrapPriceCache.clear();_marketPriceCache.clear();
 saveState();
 updatePriceModeUI();
-renderAll();
+render();
 });
 });
 })();
