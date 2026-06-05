@@ -2720,7 +2720,8 @@ applyTheme();
 };
 
 // ===== THEME TOGGLE HANDLER =====
-["mobileFabTheme","desktopMenuTheme"].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener("click",function(){state.theme=state.theme==='dark'?'light':'dark';saveState();applyTheme()})});
+// NOTE: Theme toggle is handled inside Mobile FAB and Desktop Menu IIFEs below
+// (they also close the menu after toggling — no duplicate listeners needed here)
 
 // ===== INITIAL THEME =====
 applyTheme();
