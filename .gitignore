@@ -1,0 +1,5 @@
+node_modules/
+scrape_wiki.mjs
+scrape_parallel.sh
+package.json
+package-lock.json
