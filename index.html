@@ -974,12 +974,13 @@ const _priceCache=new Map();
 // Получить цену предмета в скрапах (рекурсивно через рецепты)
 function getItemScrapPrice(name,visited){
 if(!visited)visited=new Set();
-if(visited.has(name))return 0; // защита от циклов
-visited.add(name);
-// Проверяем кэш
+// Сначала кэш — если цена уже посчитана, циклов быть не может
 if(_priceCache.has(name))return _priceCache.get(name);
-// Прямая цена из скрапа
+// Прямая цена из SCRAP_PRICES — всегда корректна, рекурсии нет
 if(SCRAP_PRICES[name]!=null){_priceCache.set(name,SCRAP_PRICES[name]);return SCRAP_PRICES[name]}
+// Защита от циклов (рецепт ссылается сам на себя, например ПНВ→ПНВ)
+if(visited.has(name))return 0;
+visited.add(name);
 // Ищем рецепт и считаем сумму ингредиентов
 const r=RECIPES.find(x=>x.name===name);
 if(!r)return 0; // нет ни прямой цены, ни рецепта
