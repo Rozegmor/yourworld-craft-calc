@@ -1047,6 +1047,163 @@ const MARKET_PRICES={
 };
 
 // Кэш рассчитанных цен для составных предметов
+const RESOURCE_IMAGES={
+"Активированный уголь":"https://wiki-yourworld.ru/images/items/coal_pills.png",
+"Баллончик с краской Immortal":"https://wiki-yourworld.ru/images/items/spray_immortal.png",
+"Батарейка 9v":"https://wiki-yourworld.ru/images/items/battery_vanilla.png",
+"Батарейка x10":"https://wiki-yourworld.ru/images/items/battery_x10.png",
+"Батарейка x15":"https://wiki-yourworld.ru/images/items/battery_x15.png",
+"Батарейка x20":"https://wiki-yourworld.ru/images/items/battery_x20.png",
+"Батарейка x30":"https://wiki-yourworld.ru/images/items/battery_x30.png",
+"Батарейка x40":"https://wiki-yourworld.ru/images/items/battery_x40.png",
+"Батарейка x5":"https://wiki-yourworld.ru/images/items/battery_x5.png",
+"Батарейка x50":"https://wiki-yourworld.ru/images/items/battery_x50.png",
+"Бежевая ткань":"https://wiki-yourworld.ru/images/items/cloth_biege.png",
+"Белая краска":"https://wiki-yourworld.ru/images/items/spray_white.png",
+"Боевой противогаз на 2 часа":"https://wiki-yourworld.ru/images/items/yw_gasmask.png",
+"Боевой противогаз на 4 часа":"https://wiki-yourworld.ru/images/items/yw_gasmask.png",
+"Боевой противогаз на 8 часов":"https://wiki-yourworld.ru/images/items/yw_gasmask.png",
+"Большая голубая линза":"https://wiki-yourworld.ru/images/items/linse_lightblue.png",
+"Большая желтая линза":"https://wiki-yourworld.ru/images/items/linse_yellow.png",
+"Большая зеленая линза":"https://wiki-yourworld.ru/images/items/linse_green.png",
+"Большая красная линза":"https://wiki-yourworld.ru/images/items/linse_red.png",
+"Большая оранжевая линза":"https://wiki-yourworld.ru/images/items/linse_orange.png",
+"Большая прозрачная линза":"https://wiki-yourworld.ru/images/items/linse.png",
+"Большая розовая линза":"https://wiki-yourworld.ru/images/items/linse_pink.png",
+"Большая синяя линза":"https://wiki-yourworld.ru/images/items/linse_blue.png",
+"Брикет Crystal Eclipse":"https://wiki-yourworld.ru/images/items/coca_brick_crystal.png",
+"Брикет Lunar Aura":"https://wiki-yourworld.ru/images/items/coca_brick_lunar.png",
+"Брикет Madness Rainbow":"https://wiki-yourworld.ru/images/items/coca_brick_madness.png",
+"Брикет Nirvana Spark":"https://wiki-yourworld.ru/images/items/coca_brick_nirvana.png",
+"Брикет Whirlwind Ecstasy":"https://wiki-yourworld.ru/images/items/coca_brick_whirwind.png",
+"Бронепластина 1 уровня":"https://wiki-yourworld.ru/images/items/armor_plate_1.png",
+"Бронепластина 2 уровня":"https://wiki-yourworld.ru/images/items/armor_plate_2.png",
+"Бронепластина 3 уровня":"https://wiki-yourworld.ru/images/items/armor_plate_3.png",
+"Бронепластина 4 уровня":"https://wiki-yourworld.ru/images/items/armor_plate_4.png",
+"Бронепластина 5 уровня":"https://wiki-yourworld.ru/images/items/armor_plate_5.png",
+"Бронепластина Immortal":"https://wiki-yourworld.ru/images/items/armor_plate_immortal.png",
+"Брусок алюминия":"https://wiki-yourworld.ru/images/items/bar_aluminium.png",
+"Брусок золота":"https://wiki-yourworld.ru/images/items/bar_gold.png",
+"Брусок лития":"https://wiki-yourworld.ru/images/items/bar_lithium.png",
+"Брусок меди":"https://wiki-yourworld.ru/images/items/bar_copper.png",
+"Брусок металла":"https://wiki-yourworld.ru/images/items/bar_metall.png",
+"Видеокарта BL-1080ti":"https://wiki-yourworld.ru/images/items/videocard_1080.png",
+"Видеокарта BL-2060":"https://wiki-yourworld.ru/images/items/videocard_2060.png",
+"Видеокарта BL-2080":"https://wiki-yourworld.ru/images/items/videocard_2080.png",
+"Видеокарта BL-3060":"https://wiki-yourworld.ru/images/items/videocard_3060.png",
+"Видеокарта BL-3080":"https://wiki-yourworld.ru/images/items/videocard_3080.png",
+"Видеокарта BL-RX":"https://wiki-yourworld.ru/images/items/videocard_blrx.png",
+"Гвозди":"https://wiki-yourworld.ru/images/items/nails.png",
+"Генератор V1":"https://wiki-yourworld.ru/images/items/generator_1.png",
+"Генератор V2":"https://wiki-yourworld.ru/images/items/generator_1.png",
+"Генератор V3":"https://wiki-yourworld.ru/images/items/generator_2.png",
+"Голубая краска":"https://wiki-yourworld.ru/images/items/spray_lightblue.png",
+"Деталь экзоскелета":"https://wiki-yourworld.ru/images/items/exo_part_1.png",
+"Доски":"https://wiki-yourworld.ru/images/items/woodenplanks.png",
+"Желтая краска":"https://wiki-yourworld.ru/images/items/spray_yellow.png",
+"Заводская удочка":"https://wiki-yourworld.ru/images/items/rod_vanilla.png",
+"Защитный ящик":"https://wiki-yourworld.ru/images/items/case_vanilla.png",
+"Зеленая краска":"https://wiki-yourworld.ru/images/items/spray_green.png",
+"Зеленая ткань":"https://wiki-yourworld.ru/images/items/cloth_green.png",
+"Канистра 50л":"https://wiki-yourworld.ru/images/items/canister_50.png",
+"Конденсаторы":"https://wiki-yourworld.ru/images/items/capasitors.png",
+"Коробка болтов":"https://wiki-yourworld.ru/images/items/box_bolts.png",
+"Коробка гаек":"https://wiki-yourworld.ru/images/items/box_nuts.png",
+"Коробка гвоздей":"https://wiki-yourworld.ru/images/items/box_nails.png",
+"Коробка припоя":"https://wiki-yourworld.ru/images/items/box_pripoy.png",
+"Коробка пружин":"https://wiki-yourworld.ru/images/items/box_springs.png",
+"Коробка с гильзами":"https://wiki-yourworld.ru/images/items/box_casing.png",
+"Коробка транзисторов":"https://wiki-yourworld.ru/images/items/box_transistors.png",
+"Красная краска":"https://wiki-yourworld.ru/images/items/spray_red.png",
+"Красная ткань":"https://wiki-yourworld.ru/images/items/cloth_red.png",
+"Кувалда":"https://wiki-yourworld.ru/images/items/sledgehammer.png",
+"Листовой металл":"https://wiki-yourworld.ru/images/items/metalplate.png",
+"Маска от сета":"https://wiki-yourworld.ru/images/items/mask.png",
+"Мачете":"https://wiki-yourworld.ru/images/items/machete.png",
+"Молоток":"https://wiki-yourworld.ru/images/items/hammer.png",
+"Набор деталей экзоскелета":"https://wiki-yourworld.ru/images/items/exo_parts_box.png",
+"Набор для грубой работы":"https://wiki-yourworld.ru/images/items/nabor_gryboi.png",
+"Набор для калибровки":"https://wiki-yourworld.ru/images/items/nabor_calibrovki.png",
+"Набор для тонкой работы":"https://wiki-yourworld.ru/images/items/nabor_tonkoi.png",
+"Набор инструментов скорняка":"https://wiki-yourworld.ru/images/items/leatherkit.png",
+"Набор калибровки":"https://wiki-yourworld.ru/images/items/nabor_calibrovki.png",
+"Оранжевая краска":"https://wiki-yourworld.ru/images/items/spray_orange.png",
+"Отвертка":"https://wiki-yourworld.ru/images/items/screwdriver.png",
+"ПНВ":"https://wiki-yourworld.ru/images/items/nvg_1.png",
+"Пакетик Crystal Eclipse":"https://wiki-yourworld.ru/images/items/coca_bag_crystal.png",
+"Пакетик Lunar Aura":"https://wiki-yourworld.ru/images/items/coca_bag_lunar.png",
+"Пакетик Madness Rainbow":"https://wiki-yourworld.ru/images/items/coca_bag_madness.png",
+"Пакетик Nirvana Spark":"https://wiki-yourworld.ru/images/items/coca_bag_nirvana.png",
+"Пакетик Whirlwind Ecstasy":"https://wiki-yourworld.ru/images/items/coca_bag_whirwind.png",
+"Паяльник":"https://wiki-yourworld.ru/images/items/solder.png",
+"Переработчик":"https://wiki-yourworld.ru/images/items/recycler.png",
+"Пила":"https://wiki-yourworld.ru/images/items/handsaw.png",
+"Плата":"https://wiki-yourworld.ru/images/items/plate_1.png",
+"Плоскогубцы":"https://wiki-yourworld.ru/images/items/pliers.png",
+"Порох":"https://wiki-yourworld.ru/images/items/gunpowder.png",
+"Противогаз из маски от сета на 2 часа":"https://wiki-yourworld.ru/images/items/mask.png",
+"Противогаз из маски от сета на 4 часа":"https://wiki-yourworld.ru/images/items/mask.png",
+"Противогаз из маски от сета на 8 часов":"https://wiki-yourworld.ru/images/items/mask.png",
+"Розовая краска":"https://wiki-yourworld.ru/images/items/spray_pink.png",
+"Сварочный аппарат":"https://wiki-yourworld.ru/images/items/welding.png",
+"Селитра":"https://wiki-yourworld.ru/images/items/selitra.png",
+"Сера":"https://wiki-yourworld.ru/images/items/sulfur.png",
+"Синяя краска":"https://wiki-yourworld.ru/images/items/spray_blue.png",
+"Синяя ткань":"https://wiki-yourworld.ru/images/items/cloth_blue.png",
+"Скотч":"https://wiki-yourworld.ru/images/items/ductape.png",
+"Слесарная ножовка":"https://wiki-yourworld.ru/images/items/hacksaw.png",
+"Суперклей":"https://wiki-yourworld.ru/images/items/superglue.png",
+"Ткань Immortal":"https://wiki-yourworld.ru/images/items/cloth_immortal.png",
+"Точильный камень":"https://wiki-yourworld.ru/images/items/stone.png",
+"Уголь":"https://wiki-yourworld.ru/images/items/coal.png",
+"Усиленная удочка":"https://wiki-yourworld.ru/images/items/rod_yw.png",
+"Фиолетовая краска":"https://wiki-yourworld.ru/images/items/spray_purple.png",
+"Часть карты телепорта на данж - Лабиринт №1":"https://wiki-yourworld.ru/images/items/cad_labirint_1_4.png",
+"Часть карты телепорта на данж - Лабиринт №2":"https://wiki-yourworld.ru/images/items/cad_labirint_2_4.png",
+"Часть карты телепорта на данж - Лабиринт №3":"https://wiki-yourworld.ru/images/items/cad_labirint_3_4.png",
+"Часть карты телепорта на данж - Лабиринт №4":"https://wiki-yourworld.ru/images/items/cad_labirint_4_4.png",
+"Часть карты телепорта на данж - Скалистый №1":"https://wiki-yourworld.ru/images/items/card_skalik_1_4.png",
+"Часть карты телепорта на данж - Скалистый №2":"https://wiki-yourworld.ru/images/items/card_skalik_2_4.png",
+"Часть карты телепорта на данж - Скалистый №3":"https://wiki-yourworld.ru/images/items/card_skalik_3_4.png",
+"Часть карты телепорта на данж - Скалистый №4":"https://wiki-yourworld.ru/images/items/card_skalik_4_4.png",
+"Черная краска":"https://wiki-yourworld.ru/images/items/spray_black.png",
+"Черная ткань":"https://wiki-yourworld.ru/images/items/cloth_black.png",
+"Чертеж бочки":"https://wiki-yourworld.ru/images/items/chertezh_barrel.png",
+"Чертеж бронежилета":"https://wiki-yourworld.ru/images/items/chertezh_vest.png",
+"Чертеж глушителя":"https://wiki-yourworld.ru/images/items/chertezh_suppressor.png",
+"Чертеж кейса":"https://wiki-yourworld.ru/images/items/chertezh_case.png",
+"Чертеж кейса для патронов":"https://wiki-yourworld.ru/images/items/chertezh_reload_case.png",
+"Чертеж куртки":"https://wiki-yourworld.ru/images/items/chertezh_jacket.png",
+"Чертеж магазина":"https://wiki-yourworld.ru/images/items/chertezh_magazine.png",
+"Чертеж ножа":"https://wiki-yourworld.ru/images/items/chertezh_knife.png",
+"Чертеж одежды":"https://wiki-yourworld.ru/images/items/chertezh_clothing.png",
+"Чертеж оружия":"https://wiki-yourworld.ru/images/items/chertezh_weapons.png",
+"Чертеж оружия Bloody":"https://wiki-yourworld.ru/images/items/chertezh_weapons_bloody.png",
+"Чертеж оружия CSR50 Bloody":"https://wiki-yourworld.ru/images/items/chertezh_weapon_csr.png",
+"Чертеж оружия серии Dark":"https://wiki-yourworld.ru/images/items/chertezh_weapon_dark_v1.png",
+"Чертеж оружия серии Gold V2":"https://wiki-yourworld.ru/images/items/chertezh_weapon_gold_v2.png",
+"Чертеж оружия серии Gold V3":"https://wiki-yourworld.ru/images/items/chertezh_weapon_gold_v3.png",
+"Чертеж патрона":"https://wiki-yourworld.ru/images/items/chertezh_ammo.png",
+"Чертеж патронов":"https://wiki-yourworld.ru/images/items/chertezh_ammo.png",
+"Чертеж пнв":"https://wiki-yourworld.ru/images/items/chertezh_nvg.png",
+"Чертеж рюкзака":"https://wiki-yourworld.ru/images/items/chertezh_backpack.png",
+"Чертеж сундука":"https://wiki-yourworld.ru/images/items/chertezh_chest.png",
+"Чертеж удочки":"https://wiki-yourworld.ru/images/items/chertezh_rod.png",
+"Чертеж фильтра":"https://wiki-yourworld.ru/images/items/bar_metall.png",
+"Чертеж шлема":"https://wiki-yourworld.ru/images/items/chertezh_helmet.png",
+"Чертеж штанов":"https://wiki-yourworld.ru/images/items/chertezh_pants.png",
+"Чертеж экзоскелета":"https://wiki-yourworld.ru/images/items/chertezh_exo.png",
+"Чертеж электроники":"https://wiki-yourworld.ru/images/items/chertezh_electronic.png",
+"Чертеж ящика":"https://wiki-yourworld.ru/images/items/chertezh_crate.png",
+"Швейный набор":"https://wiki-yourworld.ru/images/items/sewing_kit.png"
+};
+
+function getResourceImage(name){
+if(RESOURCE_IMAGES[name])return RESOURCE_IMAGES[name];
+const r=RECIPES.find(x=>x.name===name);
+if(r&&r.image)return r.image;
+return '';
+}
 const _scrapPriceCache=new Map();
 const _marketPriceCache=new Map();
 
@@ -1532,7 +1689,7 @@ let resPriceVal=0;if(state.priceMode==='market'){resPriceVal=getItemMarketPrice(
 const resPriceTag=resPriceVal>0?`<span class="res-price">${formatPrice(resPriceVal)}/шт</span>`:"";
 html+=`<div class="resource-item ${ok?"satisfied":"missing"}" data-res-name="${name.replace(/"/g,"&quot;")}" data-res-need="${needed}" data-res-have="${have}">
 <span>${ok?"\u2705":"\u274c"}</span>
-<span class="rname">${name}${srcTag}${resPriceTag}</span>
+<span class="rname">${(()=>{const img=getResourceImage(name);return img?`<img src="${img}" alt="" style="width:16px;height:16px;border-radius:3px;object-fit:contain;vertical-align:middle;margin-right:3px">`:``})()}${name}${srcTag}${resPriceTag}</span>
 <span class="rqty">${have}/${needed}</span>
 <span class="r-quick">
 <button class="r-btn" data-res-minus="${name.replace(/"/g,"&quot;")}" title="Убрать 1">\u2212</button>
@@ -1736,7 +1893,7 @@ let resPriceVal=0;if(state.priceMode==='market'){resPriceVal=getItemMarketPrice(
 const resPriceTag=resPriceVal>0?`<span class="res-price">${formatPrice(resPriceVal)}/шт</span>`:"";
 html+=`<div class="resource-item ${ok?"satisfied":"missing"}" data-res-name="${name.replace(/"/g,"&quot;")}" data-res-need="${needed}" data-res-have="${have}">
 <span>${ok?"\u2705":"\u274c"}</span>
-<span class="rname">${name}${srcTag}${resPriceTag}</span>
+<span class="rname">${(()=>{const img=getResourceImage(name);return img?`<img src="${img}" alt="" style="width:16px;height:16px;border-radius:3px;object-fit:contain;vertical-align:middle;margin-right:3px">`:``})()}${name}${srcTag}${resPriceTag}</span>
 <span class="rqty">${have}/${needed}</span>
 <span class="r-quick">
 <button class="r-btn" data-res-minus="${name.replace(/"/g,"&quot;")}" title="Убрать 1">\u2212</button>
@@ -1973,7 +2130,7 @@ let ingPriceVal=0;if(state.priceMode==='market'){ingPriceVal=getItemMarketPrice(
 const ingPriceTag=ingPriceVal>0?`<span class="modal-price">${formatPrice(ingPriceVal*qty)}</span>`:'';
 ingHtml+=`<div class="modal-ingredient" data-ing-name="${ingName.replace(/"/g,"&quot;")}" data-ing-need="${qty}" data-ing-have="${have}" title="${ok?"Кликните чтобы убрать из инвентаря":"Кликните чтобы добавить в инвентарь"}">
 <span class="ing-status">${ok?"\u2705":"\u274c"}</span>
-<span class="ing-name">${ingName}${isHdd?' (HDD)':''}</span>
+<span class="ing-name">${(()=>{const img=getResourceImage(ingName);return img?`<img src="${img}" alt="" style="width:20px;height:20px;border-radius:3px;object-fit:contain;vertical-align:middle;margin-right:4px">`:``})()}${ingName}${isHdd?' (HDD)':''}</span>
 ${ingPriceTag}
 <span class="ing-qty" style="color:${ok?"var(--green)":pct>=50?"#eab308":"var(--red)"}">${have}/${qty}</span>
 <span class="ing-hint">${ok?"есть":"клик = добавить"}</span>
