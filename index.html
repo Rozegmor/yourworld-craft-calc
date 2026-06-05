@@ -1886,8 +1886,13 @@ var SC_FRAMES=["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/r
 var frameIdx=0;
 cur.innerHTML='<img src="'+SC_FRAMES[0]+'" alt="">';
 var curImg=cur.querySelector('img');
-function animate(){frameIdx=(frameIdx+1)%SC_FRAMES.length;curImg.src=SC_FRAMES[frameIdx];}
-setInterval(animate,100);
+var _scLast=0;
+function animate(ts){
+if(!_scLast)_scLast=ts;
+if(ts-_scLast>=80){frameIdx=(frameIdx+1)%SC_FRAMES.length;curImg.src=SC_FRAMES[frameIdx];_scLast=ts;}
+requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
 document.addEventListener('mousemove',function(e){cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px'},true);
 window.addEventListener('mousemove',function(e){cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px'},true);
 
