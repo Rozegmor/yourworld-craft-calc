@@ -1,0 +1,24 @@
+{
+  "name": "Крафт-калькулятор YourWorld",
+  "short_name": "YW Крафт",
+  "description": "Крафт-калькулятор для сервера YourWorld PVE",
+  "start_url": "/yourworld-craft-calc/",
+  "scope": "/yourworld-craft-calc/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://wiki-yourworld.ru/images/ywlogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://wiki-yourworld.ru/images/ywlogo.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}
