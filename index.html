@@ -1328,9 +1328,10 @@ const invMap=getInvMap();
 const agg=getAggregatedResources();
 const missing=Object.entries(agg).filter(([name,needed])=>(invMap[name]||0)<needed).sort((a,b)=>b[1]-a[1]);
 if(!missing.length)return'Всё есть — крафть!\n\nКрафт-калькулятор YourWorld — rozegmor.github.io/yourworld-craft-calc';
-const list=missing.map(([name,needed])=>{const have=invMap[name]||0;const priceStr=formatItemPrice(name)?` (${formatItemPrice(name)}/шт)`:'';return name+' x'+(needed-have)+priceStr}).join('\n');
-const totalStr=getCraftTotalPrice()>0?`\n\nОбщая стоимость: ${formatCraftTotal()}`:'';
-return'Не хватает:\n'+list+totalStr+'\n\nКрафт-калькулятор YourWorld — rozegmor.github.io/yourworld-craft-calc';
+let missingTotal=0;
+const list=missing.map(([name,needed])=>{const have=invMap[name]||0;const need=needed-have;const priceStr=formatItemPrice(name)?` (${formatItemPrice(name)}/шт)`:'';if(state.priceMode==='market'){missingTotal+=getItemMarketPrice(name)*need}else{missingTotal+=getItemScrapPrice(name)*need*SCRAP_VALUE}return name+' x'+need+priceStr}).join('\n');
+const missingPriceStr=missingTotal>0?`\n\nСтоимость недостающих: ${state.priceMode==='market'?formatPrice(missingTotal):formatPrice(missingTotal)}`:'';
+return'Не хватает:\n'+list+missingPriceStr+'\n\nКрафт-калькулятор YourWorld — rozegmor.github.io/yourworld-craft-calc';
 }
 function showToast(msg){
 const t=document.getElementById('toast');if(!t)return;
@@ -1659,6 +1660,9 @@ const agg=getAggregatedResources();
 let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text3)">${state.craftItems.length} в списке</span><div class="share-btns"><button class="share-btn" id="copyCraftBtn" title="Скопировать список крафта"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Скопировать</button><button class="share-btn" id="downloadCraftBtn" title="Скачать список крафта как файл"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Скачать</button><button id="clearCraftBtn" style="font-size:11px;color:var(--red);background:none;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all .15s">Очистить</button></div></div>`;
 const totalScrap=getCraftTotalPrice();
 if(totalScrap>0){html+=`<div class="craft-total-price"><span class="ctp-label">Общая стоимость</span><span class="ctp-value">${_scrapSvg}${formatCraftTotal()}</span></div>`}
+// HDD warning
+const hddRequired=new Set();state.craftItems.forEach(ci=>{const r=RECIPES.find(x=>x.name===ci.name);if(!r)return;const hddName=HARDDRIVES[r.category];if(hddName&&!hasHdd(r.category))hddRequired.add(hddName)});
+if(hddRequired.size){html+=`<div class="ct-hdd missing" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>Нет дисков: ${[...hddRequired].join(', ')}</span></div>`}
 state.craftItems.forEach((ci,idx)=>{
 const r=RECIPES.find(x=>x.name===ci.name);
 if(!r)return;
@@ -1863,6 +1867,9 @@ return;
 const invMap=getInvMap();
 const agg=getAggregatedResources();
 let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text3)">${state.craftItems.length} в списке</span><div class="share-btns"><button class="share-btn" id="copyCraftBtn" title="Скопировать список крафта"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Скопировать</button><button class="share-btn" id="downloadCraftBtn" title="Скачать список крафта как файл"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Скачать</button><button id="clearCraftBtn" style="font-size:11px;color:var(--red);background:none;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all .15s">Очистить</button></div></div>`;
+// HDD warning
+const hddRequiredM=new Set();state.craftItems.forEach(ci=>{const r=RECIPES.find(x=>x.name===ci.name);if(!r)return;const hddName=HARDDRIVES[r.category];if(hddName&&!hasHdd(r.category))hddRequiredM.add(hddName)});
+if(hddRequiredM.size){html+=`<div class="ct-hdd missing" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>Нет дисков: ${[...hddRequiredM].join(', ')}</span></div>`}
 state.craftItems.forEach((ci,idx)=>{
 const r=RECIPES.find(x=>x.name===ci.name);
 if(!r)return;
