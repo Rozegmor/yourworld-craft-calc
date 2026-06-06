@@ -627,9 +627,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .hdd-inv-item-status.has{color:var(--green)}
 .hdd-inv-item-status.missing{color:var(--red)}
 
-/* ===== PROTECTION ===== */
-img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;user-drag:none;pointer-events:none}
-._dt-blur{filter:blur(12px)!important;pointer-events:none!important;transition:filter .3s}
+/* ===== PROTECTION (removed — was blocking image drag/copy) ===== */
+
 
 /* ===== HDD ===== */
 .hdd-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:10px;white-space:nowrap;margin-left:4px;transition:background .3s,color .3s,border-color .3s}
@@ -1337,13 +1336,18 @@ applyTheme();
 const hb=document.getElementById('headerBadge');if(hb)hb.textContent=RECIPES.length+' рецептов';
 updateMobileLayout();
 updateBnavBadge();
-// Re-render mobile inventory screen if it's active
 if(window.innerWidth<=768&&state.mobileTab==='inventory'){renderInventoryScreen();}
-// Re-render desktop inventory modal if it's open
 if(document.getElementById('invModalOverlay').classList.contains('open')){renderInventoryModal();}
-// Re-init scrollbars and slider after render
 if(window._initCSBAll)window._initCSBAll();
 if(window._initCSSlider)window._initCSSlider();
+}
+// Lightweight render — skips expensive renderGrid(), only updates right panel, badges, categories, inventory
+function renderLight(){
+updateCardBadges();renderCategories();renderRightContent();
+renderRecentBar();
+updateBnavBadge();
+if(window.innerWidth<=768&&state.mobileTab==='inventory'){renderInventoryScreen();}
+if(document.getElementById('invModalOverlay').classList.contains('open')){renderInventoryModal();}
 }
 
 function renderCategories(){
@@ -1601,7 +1605,7 @@ ci.qty-=craftQty;
 if(ci.qty<=0)state.craftItems=state.craftItems.filter(x=>x.qty>0);
 state.craftHistory.unshift({name,qty:craftQty,resources:usedResources,time:Date.now()});
 if(state.craftHistory.length>50)state.craftHistory.length=50;
-saveState();render();
+saveState();renderLight();
 showToast('Скрафтено: '+name+' x'+craftQty);
 if(!state.stats)state.stats={totalCrafts:0,recipesViewed:0,sessionStart:Date.now()};
 state.stats.totalCrafts=(state.stats.totalCrafts||0)+craftQty;
@@ -2070,11 +2074,11 @@ if(card){openModal(card.dataset.name);return}
 const tab=e.target.closest(".right-tab");
 if(tab){return}
 const minus=e.target.closest("[data-craft-minus]");
-if(minus){const i=+minus.dataset.craftMinus;if(state.craftItems[i].qty>1)state.craftItems[i].qty--;else state.craftItems.splice(i,1);saveState();render();return}
+if(minus){const i=+minus.dataset.craftMinus;if(state.craftItems[i].qty>1)state.craftItems[i].qty--;else state.craftItems.splice(i,1);saveState();renderLight();return}
 const plus=e.target.closest("[data-craft-plus]");
-if(plus){state.craftItems[+plus.dataset.craftPlus].qty++;saveState();render();return}
+if(plus){state.craftItems[+plus.dataset.craftPlus].qty++;saveState();renderLight();return}
 const rem=e.target.closest("[data-craft-remove]");
-if(rem){state.craftItems.splice(+rem.dataset.craftRemove,1);saveState();render();return}
+if(rem){state.craftItems.splice(+rem.dataset.craftRemove,1);saveState();renderLight();return}
 const invAddBtn=document.getElementById("invAddBtn")||document.getElementById("invAddBtnS");
 const invAddBtnS=document.getElementById("invAddBtnS");
 if(e.target===invAddBtn||e.target===invAddBtnS){
@@ -2088,40 +2092,40 @@ if(!state.hddInventory.includes(name))state.hddInventory.push(name);
 }else{
 const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty+=qty;else state.inventory.push({name,qty});
 }
-saveState();render();
+saveState();renderLight();
 }
 return;
 }
 const clearCraftBtn=document.getElementById("clearCraftBtn");
-if(e.target===clearCraftBtn){state.craftItems=[];saveState();render();return}
+if(e.target===clearCraftBtn){state.craftItems=[];saveState();renderLight();return}
 const copyCraftBtn=document.getElementById("copyCraftBtn");
 if(e.target===copyCraftBtn||e.target.closest("#copyCraftBtn")){copyCraftList();return}
 const downloadCraftBtn=document.getElementById("downloadCraftBtn");
 if(e.target===downloadCraftBtn||e.target.closest("#downloadCraftBtn")){downloadCraftList();return}
 const invDel=e.target.closest("[data-inv-del]");
-if(invDel){state.inventory.splice(+invDel.dataset.invDel,1);saveState();render();return}
+if(invDel){state.inventory.splice(+invDel.dataset.invDel,1);saveState();renderLight();return}
 const invUp=e.target.closest("[data-inv-up]");
-if(invUp){const idx=+invUp.dataset.invUp;state.inventory[idx].qty++;saveState();render();return}
+if(invUp){const idx=+invUp.dataset.invUp;state.inventory[idx].qty++;saveState();renderLight();return}
 const invDown=e.target.closest("[data-inv-down]");
-if(invDown){const idx=+invDown.dataset.invDown;if(state.inventory[idx].qty>1){state.inventory[idx].qty--;saveState();render();}return}
+if(invDown){const idx=+invDown.dataset.invDown;if(state.inventory[idx].qty>1){state.inventory[idx].qty--;saveState();renderLight();}return}
 const invSub=e.target.closest("[data-inv-sub]");
-if(invSub){state.invSubTab=invSub.dataset.invSub;saveState();render();return}
+if(invSub){state.invSubTab=invSub.dataset.invSub;saveState();renderLight();return}
 const invSortBtn=e.target.closest("[data-inv-sort]");
-if(invSortBtn){state.invSort=invSortBtn.dataset.invSort;saveState();render();return}
+if(invSortBtn){state.invSort=invSortBtn.dataset.invSort;saveState();renderLight();return}
 const hddToggle=e.target.closest("[data-hdd-toggle]");
-if(hddToggle){const name=hddToggle.dataset.hddToggle;const idx=state.hddInventory.indexOf(name);if(idx>=0){state.hddInventory.splice(idx,1)}else{state.hddInventory.push(name)}saveState();render();return}
+if(hddToggle){const name=hddToggle.dataset.hddToggle;const idx=state.hddInventory.indexOf(name);if(idx>=0){state.hddInventory.splice(idx,1)}else{state.hddInventory.push(name)}saveState();renderLight();return}
 const resPlus=e.target.closest("[data-res-plus]");
-if(resPlus){const name=resPlus.dataset.resPlus;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty++;else state.inventory.push({name,qty:1})}saveState();render();return}
+if(resPlus){const name=resPlus.dataset.resPlus;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty++;else state.inventory.push({name,qty:1})}saveState();renderLight();return}
 const resMinus=e.target.closest("[data-res-minus]");
-if(resMinus){const name=resMinus.dataset.resMinus;const ex=state.inventory.find(x=>x.name===name);if(ex){ex.qty--;if(ex.qty<=0)state.inventory=state.inventory.filter(x=>x.qty>0)}saveState();render();return}
+if(resMinus){const name=resMinus.dataset.resMinus;const ex=state.inventory.find(x=>x.name===name);if(ex){ex.qty--;if(ex.qty<=0)state.inventory=state.inventory.filter(x=>x.qty>0)}saveState();renderLight();return}
 const resRow=e.target.closest("[data-res-name]");
-if(resRow&&!e.target.closest(".r-btn")&&!e.target.closest(".source-tip")){const name=resRow.dataset.resName;const need=parseInt(resRow.dataset.resNeed)||1;const have=parseInt(resRow.dataset.resHave)||0;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();render();return}
+if(resRow&&!e.target.closest(".r-btn")&&!e.target.closest(".source-tip")){const name=resRow.dataset.resName;const need=parseInt(resRow.dataset.resNeed)||1;const have=parseInt(resRow.dataset.resHave)||0;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();renderLight();return}
 const ingRow=e.target.closest("[data-ing-name]");
-if(ingRow){const name=ingRow.dataset.ingName;const need=parseInt(ingRow.dataset.ingNeed)||1;const have=parseInt(ingRow.dataset.ingHave)||0;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();render();if(window._currentModalRecipe)openModal(window._currentModalRecipe);return}
+if(ingRow){const name=ingRow.dataset.ingName;const need=parseInt(ingRow.dataset.ingNeed)||1;const have=parseInt(ingRow.dataset.ingHave)||0;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();renderLight();if(window._currentModalRecipe)openModal(window._currentModalRecipe);return}
 const suggest=e.target.closest("[data-suggest]");
 if(suggest){openModal(suggest.dataset.suggest);return}
 const modalAdd=e.target.closest("[data-modal-add]");
-if(modalAdd){const name=modalAdd.dataset.modalAdd;const ex=state.craftItems.find(x=>x.name===name);if(ex)ex.qty++;else state.craftItems.push({name,qty:1});saveState();render();if(ex)openModal(name);else closeModal();return}
+if(modalAdd){const name=modalAdd.dataset.modalAdd;const ex=state.craftItems.find(x=>x.name===name);if(ex)ex.qty++;else state.craftItems.push({name,qty:1});saveState();renderLight();if(ex)openModal(name);else closeModal();return}
 const craftDo=e.target.closest("[data-craft-do]");
 if(craftDo){closeModal();doCraft(craftDo.dataset.craftDo);return}
 const craftableClick=e.target.closest("[data-craftable-name]");
@@ -2134,7 +2138,7 @@ document.addEventListener("change",e=>{
 if(e.target.matches("[data-inv-qty]")){
 const idx=+e.target.dataset.invQty;const v=parseInt(e.target.value)||0;
 if(v<=0)state.inventory.splice(idx,1);else state.inventory[idx].qty=v;
-saveState();render();
+saveState();renderLight();
 }
 });
 
@@ -2734,7 +2738,7 @@ if(invItem){invItem.qty+=res.qty}
 else{state.inventory.push({name:res.name,qty:res.qty})}
 });
 state.craftHistory.splice(idx,1);
-saveState();render();
+saveState();renderLight();
 showToast('Ресурсы возвращены!');
 }
 
@@ -2799,7 +2803,7 @@ const dropIdx=+item.dataset.craftIdx;
 if(dragIdx!==dropIdx){
 const moved=state.craftItems.splice(dragIdx,1)[0];
 state.craftItems.splice(dropIdx,0,moved);
-saveState();render();
+saveState();renderLight();
 }
 document.querySelectorAll(".craft-item.drag-over").forEach(el=>el.classList.remove("drag-over"));
 dragIdx=null;
@@ -2815,45 +2819,11 @@ applyTheme();
 // ===== EVENT HANDLERS: HISTORY, RECENT, THEME =====
 document.addEventListener("click",function(e){
 if(e.target.closest("[data-undo]")){undoCraft(+e.target.closest("[data-undo]").dataset.undo);return}
-if(e.target.id==="clearHistoryBtn"){state.craftHistory=[];saveState();render();return}
+if(e.target.id==="clearHistoryBtn"){state.craftHistory=[];saveState();renderLight();return}
 if(e.target.closest("[data-recent-name]")){openModal(e.target.closest("[data-recent-name]").dataset.recentName);return}
 });
 
-// ===== PROTECTION =====
-(function(){
-// --- Domain lock ---
-var _ad=['localhost','127.0.0.1','craft-calc.ru','www.craft-calc.ru','craftcalc.ru','www.craftcalc.ru','cb852696.tw1.ru','rozegmor.github.io'];
-var _h=window.location.hostname;
-var _ok=false;
-for(var i=0;i<_ad.length;i++){if(_h===_ad[i]||_h.endsWith('.'+_ad[i])){_ok=true;break}}
-if(!_ok&&_h!==''){
-document.documentElement.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#09090b;color:#f97316;font-family:system-ui;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px">&#128274;</div><div style="font-size:20px;font-weight:700">Доступ запрещён</div><div style="font-size:14px;color:#a1a1aa;margin-top:8px">Этот сайт доступен только на официальном домене.</div></div></div>';
-throw new Error('Domain lock');}
-
-// --- Block DevTools shortcuts (duplicate removed — handled above) ---
-
-// --- DevTools detection (blur when open) ---
-var _dtO=false;
-var _dtC=function(){
-var el=document.querySelector('.app');
-if(!el)return;
-if(_dtO){el.classList.add('_dt-blur')}else{el.classList.remove('_dt-blur')}
-};
-// Method 1: removed debugger timing (was killing performance/battery)
-// Method 2: window size detection (outer vs inner)
-function _dtSize(){
-var w=window.outerWidth-window.innerWidth>160;
-var h=window.outerHeight-window.innerHeight>160;
-if(w||h){_dtO=true;}else{_dtO=false;}
-_dtC();
-}
-window.addEventListener('resize',_dtSize);
-// setInterval removed for performance
-
-// --- Block drag ---
-// dragstart NOT blocked (conflicts with drag-and-drop reorder feature)
-
-})();
+// ===== PROTECTION (removed — domain lock, DevTools detection, copy/block) =====
 
 // Mobile FAB
 (function(){
