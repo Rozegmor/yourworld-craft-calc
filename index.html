@@ -29,7 +29,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 
 .right-panel{width:460px;flex-shrink:0;border-left:1px solid var(--bg3);display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative;transition:background-color .4s ease,border-color .4s ease}
 
-.right-content{flex:1;overflow:hidden}
+.right-content{}
 
 .header{display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative}.header-logo{width:32px;height:32px;border-radius:6px;object-fit:contain;flex-shrink:0}
 
@@ -1215,10 +1215,10 @@ const _scrapPriceCache=new Map();
 const _marketPriceCache=new Map();
 
 // Получить цену предмета в скрапах (рекурсивно через рецепты)
-function getItemScrapPrice(name,visited){
+function _getItemPriceByTable(pricesTable,cache,name,visited){
 if(!visited)visited=new Set();
-if(_scrapPriceCache.has(name))return _scrapPriceCache.get(name);
-if(SCRAP_PRICES[name]!=null){_scrapPriceCache.set(name,SCRAP_PRICES[name]);return SCRAP_PRICES[name]}
+if(cache.has(name))return cache.get(name);
+if(pricesTable[name]!=null){cache.set(name,pricesTable[name]);return pricesTable[name]}
 if(visited.has(name))return 0;
 visited.add(name);
 const r=RECIPE_MAP.get(name);
@@ -1226,31 +1226,17 @@ if(!r)return 0;
 let total=0;
 r.ingredients.forEach(ing=>{
 if(HDD_NAMES.has(ing.name))return;
-const ingPrice=getItemScrapPrice(ing.name,visited);
+const ingPrice=_getItemPriceByTable(pricesTable,cache,ing.name,visited);
 total+=ingPrice*ing.quantity;
 });
-if(total>0)_scrapPriceCache.set(name,total);
+if(total>0)cache.set(name,total);
 return total;
 }
 
+function getItemScrapPrice(name,visited){return _getItemPriceByTable(SCRAP_PRICES,_scrapPriceCache,name,visited)}
+
 // Получить рыночную цену предмета (рекурсивно через рецепты)
-function getItemMarketPrice(name,visited){
-if(!visited)visited=new Set();
-if(_marketPriceCache.has(name))return _marketPriceCache.get(name);
-if(MARKET_PRICES[name]!=null){_marketPriceCache.set(name,MARKET_PRICES[name]);return MARKET_PRICES[name]}
-if(visited.has(name))return 0;
-visited.add(name);
-const r=RECIPE_MAP.get(name);
-if(!r)return 0;
-let total=0;
-r.ingredients.forEach(ing=>{
-if(HDD_NAMES.has(ing.name))return;
-const ingPrice=getItemMarketPrice(ing.name,visited);
-total+=ingPrice*ing.quantity;
-});
-if(total>0)_marketPriceCache.set(name,total);
-return total;
-}
+function getItemMarketPrice(name,visited){return _getItemPriceByTable(MARKET_PRICES,_marketPriceCache,name,visited)}
 
 // Получить цену предмета в зависимости от режима
 function getItemPrice(name){
@@ -1303,7 +1289,7 @@ function saveState(){state._invVer=(state._invVer||0)+1;localStorage.setItem(STA
 
 // ===== RESOURCE CALCULATIONS =====
 let _invMapCache=null;let _invMapVersion=0;function getInvMap(){if(_invMapCache&&_invMapVersion===state._invVer)return _invMapCache;const m={};state.inventory.forEach(i=>{m[i.name]=(m[i.name]||0)+i.qty});_invMapCache=m;_invMapVersion=state._invVer||0;return m}
-function getHddMap(){const m={};state.hddInventory.forEach(name=>{m[name]=1});return m}
+
 function hasHdd(category){const hddName=HARDDRIVES[category];if(!hddName)return true;return state.hddInventory.includes(hddName)}
 function getHddStatusClass(category){if(!HARDDRIVES[category])return'base';return hasHdd(category)?'has':'missing'}
 
@@ -1524,6 +1510,7 @@ const hM=name.match(/(\d+)\s+\u0447\u0430\u0441(?:\u043e\u0432|\u0430)/);
 return hM?parseInt(hM[1]):0;}
 return 0;
 }
+function pluralR(n){const m=n%10,h=n%100;if(m===1&&h!==11)return'ингредиент';if(m>=2&&m<=4&&(h<12||h>14))return'ингредиента';return'ингредиентов'}
 function renderGrid(){
 const el=document.getElementById("itemGrid");
 let items=RECIPES;
@@ -1554,9 +1541,8 @@ return a.name.localeCompare(b.name,'ru');
 });
 if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').replace(/ё/g,'е').trim();items.sort((a,b)=>{const na=a.name.toLowerCase().normalize('NFC').replace(/ё/g,'е'),nb=b.name.toLowerCase().normalize('NFC').replace(/ё/g,'е');const aStart=na.indexOf(q)===0?0:1;const bStart=nb.indexOf(q)===0?0:1;if(aStart!==bStart)return aStart-bStart;return na.localeCompare(nb,'ru');})}
 if(!items.length){el.innerHTML='<div class="no-results">Ничего не найдено</div>';return}
-function pluralR(n){const m=n%10,h=n%100;if(m===1&&h!==11)return'ингредиент';if(m>=2&&m<=4&&(h<12||h>14))return'ингредиента';return'ингредиентов'}
 const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
-function cardHtml(r){const qty=_craftMap.get(r.name)||0;const sel=qty>0?"selected":"";const img=r.image?`<img src="${r.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';const priceVal=state.priceMode==='market'?getItemMarketPrice(r.name):getItemScrapPrice(r.name)*SCRAP_VALUE;const priceHtml=priceVal>0?`<div class="ic-price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${formatPrice(priceVal)}</div>`:'';return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}"><div class="ic-img">${img}</div><div class="ic-name">${r.name}</div>${priceHtml}<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>${qty>0?`<div class="ic-badge">${qty}</div>`:''}<div class="ic-btns"><button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}</div></div>`}
+function cardHtml(r){const qty=_craftMap.get(r.name)||0;const sel=qty>0?"selected":"";const img=r.image?`<img src="${r.image}" alt="" width="96" height="96" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';const priceVal=state.priceMode==='market'?getItemMarketPrice(r.name):getItemScrapPrice(r.name)*SCRAP_VALUE;const priceHtml=priceVal>0?`<div class="ic-price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${formatPrice(priceVal)}</div>`:'';return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}"><div class="ic-img">${img}</div><div class="ic-name">${r.name}</div>${priceHtml}<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>${qty>0?`<div class="ic-badge">${qty}</div>`:''}<div class="ic-btns"><button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}</div></div>`}
 if(!cat&&!state.searchQuery){
 const hddSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>';
 let html='';
@@ -1590,7 +1576,7 @@ if(maxCraftable<=0){showToast('Не хватает ресурсов для кр�
 const craftQty=Math.min(maxCraftable,ci.qty);
 const usedResources=[];
 r.ingredients.forEach(ing=>{
-if(hddNames.has(ing.name))return;
+if(HDD_NAMES.has(ing.name))return;
 const invItem=state.inventory.find(x=>x.name===ing.name);
 if(invItem){usedResources.push({name:ing.name,qty:ing.quantity*craftQty,before:invItem.qty});invItem.qty-=ing.quantity*craftQty;if(invItem.qty<=0)state.inventory=state.inventory.filter(x=>x.qty>0)}
 });
@@ -2568,12 +2554,11 @@ const favs=getFavs();
 let items=RECIPES.filter(r=>favs.includes(r.name));
 if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').trim();items=items.filter(r=>r.name.toLowerCase().normalize('NFC').includes(q))}
 if(!items.length){el.innerHTML='<div class="no-results">Нет избранных рецептов</div>';return}
-function pluralR(n){const m=n%10,h=n%100;if(m===1&&h!==11)return'ингредиент';if(m>=2&&m<=4&&(h<12||h>14))return'ингредиента';return'ингредиентов'}
 const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
 el.innerHTML=items.map(r=>{
 const qty=_craftMap.get(r.name)||0;
 const sel=qty>0?"selected":"";
-const img=r.image?`<img src="${r.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';
+const img=r.image?`<img src="${r.image}" alt="" width="96" height="96" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';
 return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}">
 <button class="fav-btn active" data-fav="${r.name.replace(/"/g,"&quot;")}" onclick="event.stopPropagation();toggleFav('${r.name.replace(/'/g,"\\'")}');return false" title="Убрать из избранного">\u2B50</button>
 <div class="ic-img">${img}</div>
@@ -2606,17 +2591,9 @@ card.insertBefore(btn,card.firstChild);
 };
 
 // ===== FEATURE: CRAFT TREE =====
-function buildCraftTree(recipe,mult,visited){
-if(!mult)mult=1;if(!visited)visited=new Set();
+function buildTreeInner(recipe,mult,visited){
 const invMap=getInvMap();
-let html='<div class="craft-tree">';
-// HDD requirement at top
-const hddName=HARDDRIVES[recipe.category];
-if(hddName){
-const haveHdd=hasHdd(recipe.category);
-const sc=getHddStatusClass(recipe.category);
-html+='<div class="ct-hdd '+sc+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>Нужен диск: '+hddName+'</span><span style="margin-left:auto;font-size:10px;color:'+(haveHdd?"var(--green)":"var(--red)")+'">'+(haveHdd?"\u2705 есть":"\u274c нет")+'</span></div>';
-}
+let html='';
 const subRecipes=recipe.ingredients.filter(ing=>RECIPE_MAP.has(ing.name));
 const baseIngr=recipe.ingredients.filter(ing=>!RECIPE_MAP.has(ing.name));
 if(subRecipes.length){
@@ -2658,47 +2635,20 @@ html+='<span class="ct-have '+(ok?"ok":"no")+'">'+haveQty+'/'+needQty+'</span>';
 html+='</div></div>';
 });
 }
-html+='</div>';
 return html;
 }
-function buildTreeInner(recipe,mult,visited){
-const invMap=getInvMap();
-let html='';
-const subRecipes=recipe.ingredients.filter(ing=>RECIPE_MAP.has(ing.name));
-const baseIngr=recipe.ingredients.filter(ing=>!RECIPE_MAP.has(ing.name));
-subRecipes.forEach(ing=>{
-const subR=RECIPE_MAP.get(ing.name);
-const needQty=ing.quantity*mult;
-const haveQty=invMap[ing.name]||0;
-const ok=haveQty>=needQty;
-const isCircular=visited.has(ing.name);
-html+='<div class="ct-node"><div class="ct-item">';
-if(subR&&!isCircular)html+='<span class="ct-toggle" data-ct-toggle="'+ing.name.replace(/"/g,"&quot;")+'">▶</span>';
-else html+='<span class="ct-toggle" style="visibility:hidden">▶</span>';
-html+='<span class="ct-name'+(isCircular?" ct-base":"")+'">'+ing.name+'</span>';
-html+='<span class="ct-qty">x'+needQty+'</span>';
-html+='<span class="ct-have '+(ok?"ok":"no")+'">'+haveQty+'/'+needQty+'</span>';
-html+='</div>';
-if(subR&&!isCircular){
-visited.add(ing.name);
-html+='<div class="ct-children" data-ct-children="'+ing.name.replace(/"/g,"&quot;")+'" style="display:none">';
-html+=buildTreeInner(subR,needQty,visited);
-html+='</div>';
-visited.delete(ing.name);
+function buildCraftTree(recipe,mult,visited){
+if(!mult)mult=1;if(!visited)visited=new Set();
+let html='<div class="craft-tree">';
+// HDD requirement at top
+const hddName=HARDDRIVES[recipe.category];
+if(hddName){
+const haveHdd=hasHdd(recipe.category);
+const sc=getHddStatusClass(recipe.category);
+html+='<div class="ct-hdd '+sc+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>Нужен диск: '+hddName+'</span><span style="margin-left:auto;font-size:10px;color:'+(haveHdd?"var(--green)":"var(--red)")+'">'+(haveHdd?"\u2705 есть":"\u274c нет")+'</span></div>';
 }
+html+=buildTreeInner(recipe,mult,visited);
 html+='</div>';
-});
-baseIngr.forEach(ing=>{
-const needQty=ing.quantity*mult;
-const haveQty=invMap[ing.name]||0;
-const ok=haveQty>=needQty;
-html+='<div class="ct-node"><div class="ct-item">';
-html+='<span class="ct-toggle" style="visibility:hidden">▶</span>';
-html+='<span class="ct-name ct-base">'+ing.name+'</span>';
-html+='<span class="ct-qty">x'+needQty+'</span>';
-html+='<span class="ct-have '+(ok?"ok":"no")+'">'+haveQty+'/'+needQty+'</span>';
-html+='</div></div>';
-});
 return html;
 }
 
@@ -2975,7 +2925,7 @@ if(w||h){_dtO=true;}else{_dtO=false;}
 _dtC();
 }
 window.addEventListener('resize',_dtSize);
-setInterval(_dtSize,5000);
+// setInterval removed for performance
 
 // --- Block drag ---
 // dragstart NOT blocked (conflicts with drag-and-drop reorder feature)
