@@ -358,7 +358,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .right-panel{display:none}
 .inv-screen{display:none}
 
-.save-toast{bottom:72px}
 .header{gap:8px;flex-wrap:wrap}
 .header-badge{display:none}
 .header-title span{display:none}
@@ -472,8 +471,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .changelog-items{list-style:none;padding:0;margin:0}
 .changelog-items li{font-size:12px;color:var(--text);padding:4px 0 4px 16px;position:relative;line-height:1.5}
 .changelog-items li::before{content:'';position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--text)}
-.changelog-items li.fix::before{background:var(--text)}
-.changelog-items li.new::before{background:var(--text)}
 
 .footer-info{font-size:10px;color:var(--text3);text-align:center;padding:10px 8px 8px;border-top:1px solid var(--bg3);margin-top:8px;line-height:1.6;transition:border-color .4s ease,color .4s ease}
 .footer-info a{color:var(--text3);text-decoration:none;transition:color .2s}.footer-info a:hover{color:var(--accent)}
@@ -629,12 +626,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .hdd-inv-item-status{font-size:10px;font-weight:600;white-space:nowrap}
 .hdd-inv-item-status.has{color:var(--green)}
 .hdd-inv-item-status.missing{color:var(--red)}
-.save-toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--green);color:var(--green);padding:4px 12px;border-radius:6px;font-size:11px;z-index:2001;opacity:0;transition:opacity .3s,background-color .4s ease,border-color .4s ease,color .4s ease;pointer-events:none}
-.save-toast.show{opacity:1}
 
 /* ===== PROTECTION ===== */
-body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-input,textarea,[contenteditable="true"]{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
 img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;user-drag:none;pointer-events:none}
 ._dt-blur{filter:blur(12px)!important;pointer-events:none!important;transition:filter .3s}
 
@@ -1339,6 +1332,8 @@ URL.revokeObjectURL(url);showToast('Файл скачан!');
 // ===== UI RENDERING =====
 function render(){
 renderCategories();renderGrid();renderRightContent();
+renderRecentBar();
+applyTheme();
 const hb=document.getElementById('headerBadge');if(hb)hb.textContent=RECIPES.length+' рецептов';
 updateMobileLayout();
 updateBnavBadge();
@@ -1346,6 +1341,9 @@ updateBnavBadge();
 if(window.innerWidth<=768&&state.mobileTab==='inventory'){renderInventoryScreen();}
 // Re-render desktop inventory modal if it's open
 if(document.getElementById('invModalOverlay').classList.contains('open')){renderInventoryModal();}
+// Re-init scrollbars and slider after render
+if(window._initCSBAll)window._initCSBAll();
+if(window._initCSSlider)window._initCSSlider();
 }
 
 function renderCategories(){
@@ -1356,6 +1354,10 @@ const hddCats=catKeys.filter(c=>!!HARDDRIVES[c]);
 const baseCats=catKeys.filter(c=>!HARDDRIVES[c]);
 const hddSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>';
 let html=`<button class="cat-btn${state.activeCategory===null?" active":""}" data-cat="__all">Всё <span class="cat-count">${allCount}</span></button>`;
+const favs=getFavs();
+if(favs.length>0){
+html+=`<button class="cat-btn${state.activeCategory==="__fav"?" active":""}" data-cat="__fav">\u2B50 Избранное <span class="cat-count">${favs.length}</span></button>`;
+}
 baseCats.forEach(c=>{
 const cnt=CAT_COUNTS[c]||0;
 html+=`<button class="cat-btn${state.activeCategory===c?" active":""}" data-cat="${c}">${CATEGORY_NAMES[c]} <span class="cat-count">${cnt}</span></button>`;
@@ -1515,7 +1517,8 @@ function renderGrid(){
 const el=document.getElementById("itemGrid");
 let items=RECIPES;
 const cat=state.activeCategory||null;
-if(cat)items=items.filter(r=>r.category===cat);
+if(cat==="__fav"){const favs=getFavs();items=items.filter(r=>favs.includes(r.name))}
+else if(cat)items=items.filter(r=>r.category===cat);
 if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').replace(/ё/g,'е').trim();if(q){const qLen=q.length;items=items.filter(r=>{const n=r.name.toLowerCase().normalize('NFC').replace(/ё/g,'е');if(n.indexOf(q)===0)return true;const words=n.split(/\s+/);for(let i=1;i<words.length;i++){if(words[i].indexOf(q)===0)return true;}return false;})}}
 const CAT_ORDER=["workbench", "items", "craft_resources", "electronic", "conserv", "medicine", "cases", "crates", "knife", "sets", "clothing", "weapons", "mag_dark", "mag_bloody", "mag_immortal", "mag_phantom", "suppressor"];
 items=[...items].sort((a,b)=>{
@@ -1542,7 +1545,7 @@ return a.name.localeCompare(b.name,'ru');
 if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').replace(/ё/g,'е').trim();items.sort((a,b)=>{const na=a.name.toLowerCase().normalize('NFC').replace(/ё/g,'е'),nb=b.name.toLowerCase().normalize('NFC').replace(/ё/g,'е');const aStart=na.indexOf(q)===0?0:1;const bStart=nb.indexOf(q)===0?0:1;if(aStart!==bStart)return aStart-bStart;return na.localeCompare(nb,'ru');})}
 if(!items.length){el.innerHTML='<div class="no-results">Ничего не найдено</div>';return}
 const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
-function cardHtml(r){const qty=_craftMap.get(r.name)||0;const sel=qty>0?"selected":"";const img=r.image?`<img src="${r.image}" alt="" width="96" height="96" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';const priceVal=state.priceMode==='market'?getItemMarketPrice(r.name):getItemScrapPrice(r.name)*SCRAP_VALUE;const priceHtml=priceVal>0?`<div class="ic-price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${formatPrice(priceVal)}</div>`:'';return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}"><div class="ic-img">${img}</div><div class="ic-name">${r.name}</div>${priceHtml}<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>${qty>0?`<div class="ic-badge">${qty}</div>`:''}<div class="ic-btns"><button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}</div></div>`}
+function cardHtml(r){const qty=_craftMap.get(r.name)||0;const sel=qty>0?"selected":"";const favs=getFavs();const isF=favs.includes(r.name);const favHtml=`<button class="fav-btn${isF?" active":""}" data-fav="${r.name.replace(/"/g,"&quot;")}" onclick="event.stopPropagation();toggleFav('${r.name.replace(/'/g,"\\'")}');return false" title="${isF?"Убрать из избранного":"В избранное"}">${isF?"\u2B50":"\u2606"}</button>`;const img=r.image?`<img src="${r.image}" alt="" width="96" height="96" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';const priceVal=state.priceMode==='market'?getItemMarketPrice(r.name):getItemScrapPrice(r.name)*SCRAP_VALUE;const priceHtml=priceVal>0?`<div class="ic-price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${formatPrice(priceVal)}</div>`:'';return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}" style="position:relative">${favHtml}<div class="ic-img">${img}</div><div class="ic-name">${r.name}</div>${priceHtml}<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>${qty>0?`<div class="ic-badge">${qty}</div>`:''}<div class="ic-btns"><button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}</div></div>`}
 if(!cat&&!state.searchQuery){
 const hddSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>';
 let html='';
@@ -1563,8 +1566,22 @@ collapsed.forEach(c=>{const hdr=el.querySelector(`[data-section-cat="${c}"]`);if
 el.innerHTML=items.map(r=>cardHtml(r)).join("");
 }
 }
-function addCraftItem(name){const ex=state.craftItems.find(x=>x.name===name);if(ex)ex.qty++;else state.craftItems.push({name,qty:1});saveState();render()}
-function rmCraftItem(name){const ex=state.craftItems.find(x=>x.name===name);if(ex){if(ex.qty>1)ex.qty--;else state.craftItems=state.craftItems.filter(x=>x.name!==name)}saveState();render()}
+function updateCardBadges(){
+const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
+document.querySelectorAll(".item-card").forEach(card=>{
+const name=card.dataset.name;if(!name)return;
+const qty=_craftMap.get(name)||0;
+card.classList.toggle("selected",qty>0);
+const badge=card.querySelector(".ic-badge");
+if(qty>0){if(badge){badge.textContent=qty}else{const b=document.createElement("div");b.className="ic-badge";b.textContent=qty;card.appendChild(b)}}
+else if(badge){badge.remove()}
+const minusBtn=card.querySelector(".minus");
+if(qty>0&&!minusBtn){const btn=document.createElement("button");btn.className="minus";btn.title="Убрать";btn.textContent="−";btn.onclick=function(e){e.stopPropagation();rmCraftItem(name)};card.querySelector(".ic-btns").appendChild(btn)}
+else if(qty<=0&&minusBtn){minusBtn.remove()}
+});
+}
+function addCraftItem(name){const ex=state.craftItems.find(x=>x.name===name);if(ex)ex.qty++;else state.craftItems.push({name,qty:1});saveState();updateCardBadges();renderRightContent()}
+function rmCraftItem(name){const ex=state.craftItems.find(x=>x.name===name);if(ex){if(ex.qty>1)ex.qty--;else state.craftItems=state.craftItems.filter(x=>x.name!==name)}saveState();updateCardBadges();renderRightContent()}
 
 function doCraft(name){
 const r=RECIPE_MAP.get(name);if(!r)return;
@@ -1738,11 +1755,15 @@ html+=`</div>`;
 }
 return html;
 }
+let _suggestionsCache=null;let _suggestionsVer=-1;let _suggestionsThreshold=-1;
 function buildSuggestionsHtml(){
 const invMap=getInvMap();
 const t=state.suggestionThreshold;
+const ver=state._invVer||0;
+const cacheHit=_suggestionsCache&&_suggestionsVer===ver&&_suggestionsThreshold===t;
+if(cacheHit)return _suggestionsCache;
 if(!invMap || Object.keys(invMap).length===0){
-return `<div class="suggestion-section">
+const emptyHtml= `<div class="suggestion-section">
 <div class="suggestion-section-header" id="suggestionsToggle">
 <span class="ssh-icon">🔍</span>
 <span class="ssh-title">Что собрать</span>
@@ -1752,6 +1773,8 @@ return `<div class="suggestion-section">
 <div class="suggestion-section-body" id="suggestionsBody">
 <div style="font-size:11px;color:var(--text3);padding:8px 0">Добавьте ресурсы в инвентарь (🎒), чтобы увидеть что можно скрафтить</div>
 </div></div>`;
+_suggestionsCache=emptyHtml;_suggestionsVer=ver;_suggestionsThreshold=t;
+return emptyHtml;
 }
 const suggestions=RECIPES.map(r=>({recipe:r,...calcSuggestion(r,invMap)}))
 .filter(s=>s.pct>=t).sort((a,b)=>b.pct-a.pct||b.satisfied-a.satisfied);
@@ -1801,6 +1824,7 @@ html+=`</div></div>`;
 });
 }
 html+=`</div></div>`;
+_suggestionsCache=html;_suggestionsVer=ver;_suggestionsThreshold=t;
 return html;
 }
 function buildHistoryHtml(){
@@ -1957,6 +1981,7 @@ function updateAc(items){items.forEach((it,i)=>it.classList.toggle("active",i===
 
 function openModal(name){
 const r=RECIPE_MAP.get(name);if(!r)return;
+addRecent(name);
 window._currentModalRecipe=name;
 if(!state.stats)state.stats={totalCrafts:0,recipesViewed:0,sessionStart:Date.now()};
 state.stats.recipesViewed=(state.stats.recipesViewed||0)+1;
@@ -1981,6 +2006,11 @@ ${ingPriceTag}
 <span class="ing-hint">${ok?"есть":"клик = добавить"}</span>
 </div>`;
 });
+// Craft tree section
+const hasSubRecipes=r.ingredients.some(ing=>RECIPE_MAP.has(ing.name));
+const treeHtml=hasSubRecipes?`<div class="section-title" style="margin-top:12px">Из чего крафтится <span class="line"></span></div>${buildCraftTree(r,1,new Set([r.name]))}`:'';
+// Multi-craft section
+const mcHtml=`<div class="section-title" style="margin-top:12px">Сколько нужно для N штук <span class="line"></span></div><div class="multi-craft-row"><label>Хочу:</label><input type="number" id="mcCount" min="1" value="1" max="999"><label>шт.</label><button class="mc-btn" id="mcCalcBtn">Рассчитать</button></div><div id="mcResult"></div>`;
 document.getElementById("modal").innerHTML=`
 <div class="modal-header">
 <div>${img}</div>
@@ -1997,8 +2027,25 @@ ${ingHtml}
 <button class="modal-craft-btn" data-modal-add="${r.name.replace(/"/g,"&quot;")}" style="flex:1">${ci?"Ещё +1 (в списке "+ci.qty+")":"Добавить в список крафта"}</button>
 ${ci&&maxCraftable>0?`<button class="modal-craft-btn" data-craft-do="${r.name.replace(/"/g,"&quot;")}" style="flex:1;background:var(--green)">Скрафтить (x${maxCraftable})</button>`:''}
 </div>
+${treeHtml}
+${mcHtml}
 </div>`;
 document.getElementById("modalOverlay").classList.add("open");
+// Multi-craft button handler
+document.getElementById("mcCalcBtn").addEventListener("click",function(){
+const count=parseInt(document.getElementById("mcCount").value)||1;
+const result=calcMultiCraft(r,count);
+const resEl=document.getElementById("mcResult");
+if(!resEl)return;
+let html='<div class="mc-result"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Базовые ресурсы для '+count+' шт. (зелёным — хватает, красным — нет):</div>';
+Object.entries(result).sort((a,b)=>b[1]-a[1]).forEach(([rName,qty])=>{
+const have=invMap[rName]||0;
+const ok=have>=qty;
+html+='<div class="mc-item"><span class="'+(ok?"mc-ok":"mc-no")+'">'+rName+'</span><span class="'+(ok?"mc-ok":"mc-no")+'">'+have+'/'+qty+'</span></div>';
+});
+html+='</div>';
+resEl.innerHTML=html;
+});
 }
 
 function closeModal(){document.getElementById("modalOverlay").classList.remove("open");window._currentModalRecipe=null}
@@ -2011,7 +2058,7 @@ function updateMobileBadge(){
 // Event delegation
 document.addEventListener("click",e=>{
 const cat=e.target.closest("[data-cat]");
-if(cat){state.activeCategory=cat.dataset.cat==="__all"?null:cat.dataset.cat;state.searchQuery='';document.getElementById("search").value='';saveState();render();return}
+if(cat){const v=cat.dataset.cat;state.activeCategory=v==="__all"?null:v;state.searchQuery='';document.getElementById("search").value='';saveState();render();return}
 const gsh=e.target.closest(".grid-section-header");
 if(gsh){const secCat=gsh.dataset.sectionCat;const body=gsh.nextElementSibling;const toggle=gsh.querySelector('.gsh-toggle');if(body){const isCollapsed=body.classList.toggle('collapsed');if(toggle)toggle.classList.toggle('collapsed',isCollapsed);if(!state._collapsedSections)state._collapsedSections=[];if(isCollapsed){if(!state._collapsedSections.includes(secCat))state._collapsedSections.push(secCat)}else{state._collapsedSections=state._collapsedSections.filter(c=>c!==secCat)}}return}
 const add=e.target.closest("[data-add]");
@@ -2524,71 +2571,11 @@ render();
 
 // ===== FEATURE: FAVORITES =====
 const FAV_KEY="yw_craft_favs";
-function getFavs(){try{return JSON.parse(localStorage.getItem(FAV_KEY))||[]}catch(e){return[]}}
-function setFavs(favs){localStorage.setItem(FAV_KEY,JSON.stringify(favs))}
+let _favsCache=null;let _favsKey='';
+function getFavs(){const k=localStorage.getItem(FAV_KEY)||'';if(_favsCache&&_favsKey===k)return _favsCache;try{_favsCache=JSON.parse(k)||[];_favsKey=k;return _favsCache}catch(e){_favsCache=[];_favsKey=k;return[]}}
+function setFavs(favs){_favsCache=favs;_favsKey=JSON.stringify(favs);localStorage.setItem(FAV_KEY,_favsKey)}
 function toggleFav(name){let favs=getFavs();const idx=favs.indexOf(name);if(idx>=0)favs.splice(idx,1);else favs.push(name);setFavs(favs);render()}
 function isFav(name){return getFavs().includes(name)}
-
-// Patch renderCategories to add favorites button
-const _origRenderCategories=renderCategories;
-renderCategories=function(){
-_origRenderCategories();
-const el=document.getElementById("categories");
-const favs=getFavs();
-if(favs.length>0){
-const favBtn=document.createElement("button");
-favBtn.className="cat-btn"+(state.activeCategory==="__fav"?" active":"");
-favBtn.dataset.cat="__fav";
-favBtn.innerHTML='\u2B50 Избранное <span class="cat-count">'+favs.length+'</span>';
-el.insertBefore(favBtn,el.firstChild);
-}
-};
-
-// Patch category filter for favorites
-const _origRenderGrid=renderGrid;
-renderGrid=function(){
-const cat=state.activeCategory||null;
-if(cat==="__fav"){
-const el=document.getElementById("itemGrid");
-const favs=getFavs();
-let items=RECIPES.filter(r=>favs.includes(r.name));
-if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').trim();items=items.filter(r=>r.name.toLowerCase().normalize('NFC').includes(q))}
-if(!items.length){el.innerHTML='<div class="no-results">Нет избранных рецептов</div>';return}
-const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
-el.innerHTML=items.map(r=>{
-const qty=_craftMap.get(r.name)||0;
-const sel=qty>0?"selected":"";
-const img=r.image?`<img src="${r.image}" alt="" width="96" height="96" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';
-return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}">
-<button class="fav-btn active" data-fav="${r.name.replace(/"/g,"&quot;")}" onclick="event.stopPropagation();toggleFav('${r.name.replace(/'/g,"\\'")}');return false" title="Убрать из избранного">\u2B50</button>
-<div class="ic-img">${img}</div>
-<div class="ic-name">${r.name}</div>
-<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>
-${qty>0?`<div class="ic-badge">${qty}</div>`:''}
-<div class="ic-btns">
-<button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>
-${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}
-</div>
-</div>`}).join("");
-return;
-}
-// Normal render with fav buttons
-_origRenderGrid();
-// Add fav buttons to rendered cards
-document.querySelectorAll(".item-card").forEach(card=>{
-const name=card.dataset.name;if(!name)return;
-const favs=getFavs();
-const isF=favs.includes(name);
-const btn=document.createElement("button");
-btn.className="fav-btn"+(isF?" active":"");
-btn.dataset.fav=name;
-btn.title=isF?"Убрать из избранного":"В избранное";
-btn.innerHTML=isF?'\u2B50':'\u2606';
-btn.onclick=function(e){e.stopPropagation();toggleFav(name);return false};
-card.style.position="relative";
-card.insertBefore(btn,card.firstChild);
-});
-};
 
 // ===== FEATURE: CRAFT TREE =====
 function buildTreeInner(recipe,mult,visited){
@@ -2717,44 +2704,6 @@ reader.readAsText(file);
 e.target.value="";
 });
 
-// ===== PATCH openModal to add craft tree + multi-craft =====
-const _origOpenModal=openModal;
-openModal=function(name){
-const r=RECIPE_MAP.get(name);if(!r)return;
-_origOpenModal(name);
-const modalBody=document.querySelector("#modal .modal-body");
-if(!modalBody)return;
-
-// Add craft tree section
-const hasSubRecipes=r.ingredients.some(ing=>RECIPE_MAP.has(ing.name));
-if(hasSubRecipes){
-const treeDiv=document.createElement("div");
-treeDiv.innerHTML='<div class="section-title" style="margin-top:12px">Из чего крафтится <span class="line"></span></div>'+buildCraftTree(r,1,new Set([r.name]));
-modalBody.appendChild(treeDiv);
-}
-
-// Add multi-craft section
-const mcDiv=document.createElement("div");
-mcDiv.innerHTML='<div class="section-title" style="margin-top:12px">Сколько нужно для N штук <span class="line"></span></div><div class="multi-craft-row"><label>Хочу:</label><input type="number" id="mcCount" min="1" value="1" max="999"><label>шт.</label><button class="mc-btn" id="mcCalcBtn">Рассчитать</button></div><div id="mcResult"></div>';
-modalBody.appendChild(mcDiv);
-
-document.getElementById("mcCalcBtn").addEventListener("click",function(){
-const count=parseInt(document.getElementById("mcCount").value)||1;
-const result=calcMultiCraft(r,count);
-const invMap=getInvMap();
-const resEl=document.getElementById("mcResult");
-if(!resEl)return;
-let html='<div class="mc-result"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Базовые ресурсы для '+count+' шт. (зелёным — хватает, красным — нет):</div>';
-Object.entries(result).sort((a,b)=>b[1]-a[1]).forEach(([rName,qty])=>{
-const have=invMap[rName]||0;
-const ok=have>=qty;
-html+='<div class="mc-item"><span class="'+(ok?"mc-ok":"mc-no")+'">'+rName+'</span><span class="'+(ok?"mc-ok":"mc-no")+'">'+have+'/'+qty+'</span></div>';
-});
-html+='</div>';
-resEl.innerHTML=html;
-});
-};
-
 // Patch event handlers for export/import
 document.addEventListener("click",function(e){
 if(e.target.id==="exportInvBtn"||e.target.id==="exportInvBtnS"){exportInventory();return}
@@ -2856,24 +2805,6 @@ document.querySelectorAll(".craft-item.drag-over").forEach(el=>el.classList.remo
 dragIdx=null;
 });
 
-// ===== PATCH: Track recent on openModal =====
-const _origOpenModal2=openModal;
-openModal=function(name){
-addRecent(name);
-_origOpenModal2(name);
-};
-
-// ===== PATCH: render to include recent + theme + scrollbar reinit =====
-const _origRender=render;
-render=function(){
-_origRender();
-renderRecentBar();
-applyTheme();
-// Re-init scrollbars and slider after render
-if(window._initCSBAll)window._initCSBAll();
-if(window._initCSSlider)window._initCSSlider();
-};
-
 // ===== THEME TOGGLE HANDLER =====
 // NOTE: Theme toggle is handled inside Mobile FAB and Desktop Menu IIFEs below
 // (they also close the menu after toggling — no duplicate listeners needed here)
@@ -2888,14 +2819,6 @@ if(e.target.id==="clearHistoryBtn"){state.craftHistory=[];saveState();render();r
 if(e.target.closest("[data-recent-name]")){openModal(e.target.closest("[data-recent-name]").dataset.recentName);return}
 });
 
-// ===== COPYRIGHT (merged) =====
-(function(){
-'use strict';
-document.addEventListener('contextmenu',function(e){e.preventDefault();return false});
-document.addEventListener('keydown',function(e){
-if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='u')){e.preventDefault();return false}
-});
-})();
 // ===== PROTECTION =====
 (function(){
 // --- Domain lock ---
@@ -2930,13 +2853,6 @@ window.addEventListener('resize',_dtSize);
 // --- Block drag ---
 // dragstart NOT blocked (conflicts with drag-and-drop reorder feature)
 
-// --- Block copy/cut ---
-document.addEventListener('copy',function(e){e.preventDefault();return false;});
-document.addEventListener('cut',function(e){e.preventDefault();return false;});
-
-// --- Console warning ---
-console.log('%c⚠ Стоп!','%cfont-size:48px;font-weight:bold;color:red;background:#000;padding:10px 20px;border-radius:8px');
-console.log('%cЭтот раздел браузера предназначен для разработчиков. Копирование кода или данных этого сайта запрещено. Если вас попросили что-то вставить сюда — это мошенники.','font-size:14px;color:#f97316;background:#18181b;padding:10px;border-radius:4px');
 })();
 
 // Mobile FAB
