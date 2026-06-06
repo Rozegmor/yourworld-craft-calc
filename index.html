@@ -11,6 +11,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://wiki-yourworld.ru">
+<link rel="dns-prefetch" href="https://wiki-yourworld.ru">
 <link rel="manifest" href="./manifest.json">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -541,8 +543,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .stats-bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;transition:background-color .4s ease}
 .stats-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
 .stats-bar-fill.green{background:var(--green)}
-.stats-bar-fill.orange{background:var(--green)}
-.stats-bar-fill.blue{background:var(--green)}
+.stats-bar-fill.orange{background:var(--accent)}
+.stats-bar-fill.blue{background:#3b82f6}
 .stats-bar-val{font-size:10px;color:var(--text2);min-width:28px;text-align:right}
 .stats-reset-btn{margin-top:12px;padding:6px 14px;background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:6px;color:var(--red);font-size:11px;cursor:pointer;transition:all .15s}
 .stats-reset-btn:hover{background:rgba(239,68,68,.1);border-color:var(--red)}
@@ -1206,6 +1208,9 @@ const r=RECIPE_MAP.get(name);
 if(r&&r.image)return r.image;
 return '';
 }
+// Предрасчитанные кэши
+const HDD_NAMES=new Set(Object.values(HARDDRIVES));
+const CAT_COUNTS={};RECIPES.forEach(r=>{CAT_COUNTS[r.category]=(CAT_COUNTS[r.category]||0)+1});
 const _scrapPriceCache=new Map();
 const _marketPriceCache=new Map();
 
@@ -1218,10 +1223,9 @@ if(visited.has(name))return 0;
 visited.add(name);
 const r=RECIPE_MAP.get(name);
 if(!r)return 0;
-const hddNames=new Set(Object.values(HARDDRIVES));
 let total=0;
 r.ingredients.forEach(ing=>{
-if(hddNames.has(ing.name))return;
+if(HDD_NAMES.has(ing.name))return;
 const ingPrice=getItemScrapPrice(ing.name,visited);
 total+=ingPrice*ing.quantity;
 });
@@ -1238,10 +1242,9 @@ if(visited.has(name))return 0;
 visited.add(name);
 const r=RECIPE_MAP.get(name);
 if(!r)return 0;
-const hddNames=new Set(Object.values(HARDDRIVES));
 let total=0;
 r.ingredients.forEach(ing=>{
-if(hddNames.has(ing.name))return;
+if(HDD_NAMES.has(ing.name))return;
 const ingPrice=getItemMarketPrice(ing.name,visited);
 total+=ingPrice*ing.quantity;
 });
@@ -1296,10 +1299,10 @@ let state=loadState();
 document.getElementById("search").value=state.searchQuery||'';
 function defaultState(){return{craftItems:[],inventory:[],hddInventory:[],suggestionThreshold:50,activeRightTab:"craft",activeCategory:null,searchQuery:"",craftHistory:[],recentRecipes:[],theme:"dark",priceMode:"market",invSubTab:"resources",invSort:"history",_collapsedSections:[],mobileTab:"catalog",stats:{totalCrafts:0,recipesViewed:0,sessionStart:Date.now()}}}
 function loadState(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY));if(!s||!s.craftItems)return defaultState();if(s.activeCategory&&!RECIPES.some(r=>r.category===s.activeCategory))s.activeCategory=null;if(typeof s.searchQuery!=='string')s.searchQuery='';if(s.activeRightTab!=='craft'&&s.activeRightTab!=='suggestions'&&s.activeRightTab!=='inventory'&&s.activeRightTab!=='history')s.activeRightTab='craft';if(s.mobileTab!=='catalog'&&s.mobileTab!=='craft'&&s.mobileTab!=='inventory')s.mobileTab='catalog';if(!Array.isArray(s.craftHistory))s.craftHistory=[];if(!Array.isArray(s.recentRecipes))s.recentRecipes=[];if(typeof s.theme!=='string')s.theme='dark';if(s.priceMode!=='scrap'&&s.priceMode!=='market')s.priceMode='market';if(!Array.isArray(s.hddInventory))s.hddInventory=[];else s.hddInventory=s.hddInventory.map(x=>typeof x==='object'?x.name:x).filter(Boolean);if(typeof s.invSubTab!=='string')s.invSubTab='resources';if(typeof s.invSort!=='string'||(s.invSort!=='history'&&s.invSort!=='alpha'))s.invSort='history';if(!Array.isArray(s._collapsedSections))s._collapsedSections=[];if(!s.stats||typeof s.stats!=='object')s.stats={totalCrafts:0,recipesViewed:0,sessionStart:Date.now()};if(typeof s.stats.totalCrafts!=='number')s.stats.totalCrafts=0;if(typeof s.stats.recipesViewed!=='number')s.stats.recipesViewed=0;if(!s.stats.sessionStart)s.stats.sessionStart=Date.now();return s}catch(e){return defaultState()}}
-function saveState(){_invMapCache=null;_invMapSerial=-1;localStorage.setItem(STATE_KEY,JSON.stringify(state))}
+function saveState(){state._invVer=(state._invVer||0)+1;localStorage.setItem(STATE_KEY,JSON.stringify(state))}
 
 // ===== RESOURCE CALCULATIONS =====
-let _invMapCache=null;let _invMapSerial=-1;function getInvMap(){const s=state.inventory.length+":"+state.inventory.map(i=>i.name+i.qty).join(",");if(_invMapSerial===s&&_invMapCache)return _invMapCache;const m={};state.inventory.forEach(i=>{m[i.name]=(m[i.name]||0)+i.qty});_invMapCache=m;_invMapSerial=s;return m}
+let _invMapCache=null;let _invMapVersion=0;function getInvMap(){if(_invMapCache&&_invMapVersion===state._invVer)return _invMapCache;const m={};state.inventory.forEach(i=>{m[i.name]=(m[i.name]||0)+i.qty});_invMapCache=m;_invMapVersion=state._invVer||0;return m}
 function getHddMap(){const m={};state.hddInventory.forEach(name=>{m[name]=1});return m}
 function hasHdd(category){const hddName=HARDDRIVES[category];if(!hddName)return true;return state.hddInventory.includes(hddName)}
 function getHddStatusClass(category){if(!HARDDRIVES[category])return'base';return hasHdd(category)?'has':'missing'}
@@ -1368,13 +1371,13 @@ const baseCats=catKeys.filter(c=>!HARDDRIVES[c]);
 const hddSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>';
 let html=`<button class="cat-btn${state.activeCategory===null?" active":""}" data-cat="__all">Всё <span class="cat-count">${allCount}</span></button>`;
 baseCats.forEach(c=>{
-const cnt=RECIPES.filter(r=>r.category===c).length;
+const cnt=CAT_COUNTS[c]||0;
 html+=`<button class="cat-btn${state.activeCategory===c?" active":""}" data-cat="${c}">${CATEGORY_NAMES[c]} <span class="cat-count">${cnt}</span></button>`;
 });
 if(hddCats.length){
 html+=`<div class="cat-divider"></div><span class="cat-label">С диском:</span>`;
 hddCats.forEach(c=>{
-const cnt=RECIPES.filter(r=>r.category===c).length;
+const cnt=CAT_COUNTS[c]||0;
 const sc=getHddStatusClass(c);
 const hddText=sc==='has'?'есть':'нет';
 html+=`<button class="cat-btn${state.activeCategory===c?" active":""}" data-cat="${c}" title="${HARDDRIVES[c]} — ${sc==='has'?'Диск есть, рецепты доступны':'Нет диска, рецепты заблокированы'}">${CATEGORY_NAMES[c]}<span class="cat-hdd-badge ${sc}">${hddSvg}${hddText}</span><span class="cat-count">${cnt}</span></button>`;
@@ -1552,7 +1555,8 @@ return a.name.localeCompare(b.name,'ru');
 if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').replace(/ё/g,'е').trim();items.sort((a,b)=>{const na=a.name.toLowerCase().normalize('NFC').replace(/ё/g,'е'),nb=b.name.toLowerCase().normalize('NFC').replace(/ё/g,'е');const aStart=na.indexOf(q)===0?0:1;const bStart=nb.indexOf(q)===0?0:1;if(aStart!==bStart)return aStart-bStart;return na.localeCompare(nb,'ru');})}
 if(!items.length){el.innerHTML='<div class="no-results">Ничего не найдено</div>';return}
 function pluralR(n){const m=n%10,h=n%100;if(m===1&&h!==11)return'ингредиент';if(m>=2&&m<=4&&(h<12||h>14))return'ингредиента';return'ингредиентов'}
-function cardHtml(r){const qty=(state.craftItems.find(x=>x.name===r.name)||{}).qty||0;const sel=qty>0?"selected":"";const img=r.image?`<img src="${r.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';const priceVal=state.priceMode==='market'?getItemMarketPrice(r.name):getItemScrapPrice(r.name)*SCRAP_VALUE;const priceHtml=priceVal>0?`<div class="ic-price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${formatPrice(priceVal)}</div>`:'';return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}"><div class="ic-img">${img}</div><div class="ic-name">${r.name}</div>${priceHtml}<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>${qty>0?`<div class="ic-badge">${qty}</div>`:''}<div class="ic-btns"><button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}</div></div>`}
+const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
+function cardHtml(r){const qty=_craftMap.get(r.name)||0;const sel=qty>0?"selected":"";const img=r.image?`<img src="${r.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';const priceVal=state.priceMode==='market'?getItemMarketPrice(r.name):getItemScrapPrice(r.name)*SCRAP_VALUE;const priceHtml=priceVal>0?`<div class="ic-price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${formatPrice(priceVal)}</div>`:'';return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}"><div class="ic-img">${img}</div><div class="ic-name">${r.name}</div>${priceHtml}<div class="ic-cnt">${r.ingredients.length} ${pluralR(r.ingredients.length)}</div>${qty>0?`<div class="ic-badge">${qty}</div>`:''}<div class="ic-btns"><button onclick="event.stopPropagation();addCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Добавить">+</button>${qty>0?`<button class="minus" onclick="event.stopPropagation();rmCraftItem('${r.name.replace(/'/g,"\\'")}')" title="Убрать">−</button>`:''}</div></div>`}
 if(!cat&&!state.searchQuery){
 const hddSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>';
 let html='';
@@ -1580,9 +1584,8 @@ function doCraft(name){
 const r=RECIPE_MAP.get(name);if(!r)return;
 const ci=state.craftItems.find(x=>x.name===name);if(!ci)return;
 const invMap=getInvMap();
-const hddNames=new Set(Object.values(HARDDRIVES));
 let maxCraftable=ci.qty;
-r.ingredients.forEach(ing=>{if(hddNames.has(ing.name))return;const have=invMap[ing.name]||0;const canMake=Math.floor(have/ing.quantity);if(canMake<maxCraftable)maxCraftable=canMake});
+r.ingredients.forEach(ing=>{if(HDD_NAMES.has(ing.name))return;const have=invMap[ing.name]||0;const canMake=Math.floor(have/ing.quantity);if(canMake<maxCraftable)maxCraftable=canMake});
 if(maxCraftable<=0){showToast('Не хватает ресурсов для крафта!');return}
 const craftQty=Math.min(maxCraftable,ci.qty);
 const usedResources=[];
@@ -1690,7 +1693,7 @@ const have=invMap[name]||0;
 const ok=have>=needed;
 const src=RESOURCE_SOURCES[name]||'';
 const srcTag=src?`<span class="source-tip">\u2139<span class="source-tip-popup">Где взять: ${src}</span></span>`:'';
-const hddNames=new Set(Object.values(HARDDRIVES));const isHdd=hddNames.has(name);
+const isHdd=HDD_NAMES.has(name);
 let resPriceVal=0;if(state.priceMode==='market'){resPriceVal=getItemMarketPrice(name)}else{resPriceVal=getItemScrapPrice(name)*SCRAP_VALUE}
 const resPriceTag=resPriceVal>0?`<span class="res-price">${formatPrice(resPriceVal)}/шт</span>`:"";
 html+=`<div class="resource-item ${ok?"satisfied":"missing"}" data-res-name="${name.replace(/"/g,"&quot;")}" data-res-need="${needed}" data-res-have="${have}">
@@ -1843,12 +1846,7 @@ return html;
 // ===== RESOURCE SOURCES (must be before renderCraftTab) =====
 const RESOURCE_SOURCES={"Сера":"Лут в мире, добыча в пещерах","Селитра":"Лут в мире, добыча в пещерах","Уголь":"Лут в мире, добыча в пещерах","Порох":"Лут в мире, пещеры, кейсы","Коробка с гильзами":"Лут в мире, военные базы","Чертеж патронов":"Лут в мире, кейсы","Чертеж оружия серии Dark":"Кейсы, аукцион","Скотч":"Лут в мире, магазины","Мачете":"Лут в мире, кейсы","Швейный набор":"Лут в мире, магазины","Кувалда":"Лут в мире, кейсы","Слесарная ножовка":"Лут в мире, кейсы","Бронепластина 1 уровня":"Лут в мире, мобы","Бронепластина 2 уровня":"Лут в мире, мобы","Бронепластина 3 уровня":"Лут в мире, мобы","Бронепластина 4 уровня":"Лут в мире, мобы","Бронепластина 5 уровня":"Лут в мире, мобы","Черная ткань":"Лут в мире, парашюты","Бежевая ткань":"Лут в мире, парашюты","Синяя ткань":"Лут в мире, парашюты","Зеленая ткань":"Лут в мире, парашюты","Красная ткань":"Лут в мире, парашюты","Черная краска":"Лут в мире, кейсы","Синяя краска":"Лут в мире, кейсы","Зеленая краска":"Лут в мире, кейсы","Голубая краска":"Лут в мире, кейсы","Оранжевая краска":"Лут в мире, кейсы","Жесткий диск":"Лут в мире, кейсы, военные базы","Батарейка":"Лут в мире, электроника","Видеокарта":"Лут в мире, электроника","Генератор":"Лут в мире, кейсы","ПНВ":"Лут в мире, кейсы, военные базы","Клей":"Лут в мире, магазины","Аптечка":"Лут в мире, медицина","Стимулятор":"Лут в мире, медицина","Чертеж удочки":"Лут в мире, рыбалка","Усиленная удочка":"Лут в мире, рыбалка","Заводская удочка":"Лут в мире, рыбалка","Пакетик Crystal Eclipse":"Лут в мире, нарколаборатории","Пакетик Lunar Aura":"Лут в мире, нарколаборатории","Пакетик Madness Rainbow":"Лут в мире, нарколаборатории","Пакетик Nirvana Spark":"Лут в мире, нарколаборатории","Пакетик Whirlwind Ecstasy":"Лут в мире, нарколаборатории","Линза":"Лут в мире, электроника","Брусок":"Лут в мире, металлолом","Набор для тонкой работы":"Лут в мире, кейсы, магазины","Паяльник":"Лут в мире, кейсы, магазины","Коробка припоя":"Лут в мире, кейсы, магазины","Коробка пружин":"Лут в мире, кейсы, магазины","Чертеж магазина":"Лут в мире, кейсы, аукцион","Брусок металла":"Лут в мире, металлолом, кейсы","Сварочный аппарат":"Лут в мире, кейсы, магазины","Брусок лития":"Лут в мире, шахты, кейсы","Брусок меди":"Лут в мире, шахты, кейсы","Набор для грубой работы":"Лут в мире, кейсы, магазины","Молоток":"Лут в мире, кейсы, магазины","Брусок алюминия":"Лут в мире, шахты, кейсы","Плоскогубцы":"Лут в мире, кейсы, магазины","Коробка болтов":"Лут в мире, кейсы, магазины","Коробка гаек":"Лут в мире, кейсы, магазины","Чертеж шлема":"Лут в мире, кейсы, аукцион","Чертеж куртки":"Лут в мире, кейсы, аукцион","Чертеж штанов":"Лут в мире, кейсы, аукцион","Защитный ящик":"Лут в мире, кейсы, магазины","Набор для калибровки":"Лут в мире, кейсы, аукцион","Чертеж бронежилета":"Лут в мире, кейсы, аукцион","Чертеж одежды":"Лут в мире, кейсы, аукцион","Чертеж кейса":"Лут в мире, кейсы, аукцион","Чертеж оружия":"Лут в мире, кейсы, аукцион","Чертеж ящика":"Лут в мире, кейсы, аукцион","Пластиковая бутылка":"Лут в мире, магазины","Кухонный нож":"Лут в мире, магазины","Куртка химзащиты":"Лут в мире, кейсы, заражённые зоны","Штаны химзащиты":"Лут в мире, кейсы, заражённые зоны","Шлем химзащиты":"Лут в мире, кейсы, заражённые зоны","Ботинки химзащиты":"Лут в мире, кейсы, заражённые зоны","Перчатки химзащиты":"Лут в мире, кейсы, заражённые зоны","Набор инструментов скорняка":"Лут в мире, кейсы, аукцион","Чертеж электроники":"Лут в мире, кейсы, аукцион","Пила":"Лут в мире, кейсы, магазины","Масло":"Лут в мире, ферма, магазины","Соль":"Лут в мире, ферма, магазины","Специи":"Лут в мире, ферма, магазины","Уксус":"Лут в мире, ферма, магазины","Настойка йода":"Лут в мире, медицина, магазины","Гвозди":"Лут в мире, кейсы, магазины","Чертеж рюкзака":"Лут в мире, кейсы, аукцион","Красная краска":"Лут в мире, кейсы","Желтая краска":"Лут в мире, кейсы","Белая краска":"Лут в мире, кейсы","Розовая краска":"Лут в мире, кейсы","Фиолетовая краска":"Лут в мире, кейсы","Чёрная плата":"Лут в мире, электроника, кейсы","Сине-зелёная плата":"Лут в мире, электроника, кейсы","Сине-белая плата":"Лут в мире, электроника, кейсы","Пустая банка":"Лут в мире, магазины","Большая пустая банка":"Лут в мире, магазины","Листовой металл":"Лут в мире, металлолом, кейсы","Коробка транзисторов":"Лут в мире, электроника, кейсы","Конденсаторы":"Лут в мире, электроника, кейсы","Коробка гвоздей":"Лут в мире, кейсы, магазины","Батарейка 9v":"Лут в мире, электроника, магазины","Видеокарта BL-2060":"Лут в мире, кейсы, электроника","Генератор V1":"Лут в мире, кейсы, электроника","Отвертка":"Лут в мире, кейсы, магазины","Суперклей":"Лут в мире, кейсы, магазины","Бинт":"Лут в мире, медицина, магазины","Клей БФ-6":"Лут в мире, медицина, магазины","Банка йода":"Лут в мире, медицина, магазины","Витамины":"Лут в мире, медицина, магазины","Тетрациклин":"Лут в мире, медицина, магазины","Аптечка 30":"Лут в мире, медицина","Активированный уголь":"Лут в мире, медицина, магазины","Чертеж пнв":"Лут в мире, кейсы, аукцион","Чертеж фильтра":"Лут в мире, кейсы, аукцион","Чертеж ножа":"Лут в мире, кейсы, аукцион","Чертеж экзоскелета":"Лут в мире, кейсы, аукцион","Чертеж сундука":"Лут в мире, кейсы, аукцион","Чертеж бочки":"Лут в мире, кейсы, аукцион","Чертеж глушителя":"Лут в мире, кейсы, аукцион","Чертеж оружия Bloody":"Лут в мире, кейсы, аукцион","Чертеж оружия CSR50 Bloody":"Лут в мире, кейсы, аукцион","Чертеж оружия серии Gold V2":"Лут в мире, кейсы, аукцион","Чертеж оружия серии Gold V3":"Лут в мире, кейсы, аукцион","Большая прозрачная линза":"Лут в мире, электроника, кейсы","Большая синяя линза":"Лут в мире, электроника, кейсы","Большая зеленая линза":"Лут в мире, электроника, кейсы","Большая голубая линза":"Лут в мире, электроника, кейсы","Большая оранжевая линза":"Лут в мире, электроника, кейсы","Большая розовая линза":"Лут в мире, электроника, кейсы","Большая красная линза":"Лут в мире, электроника, кейсы","Большая желтая линза":"Лут в мире, электроника, кейсы","Деталь экзоскелета":"Лут в мире, кейсы, мобы","Точильный камень":"Лут в мире, кейсы, магазины","Банка сахара":"Лут в мире, ферма, магазины","Канистра 50л":"Лут в мире, кейсы, магазины","Растительный материал":"Сбор растений в мире","Маска от сета":"Лут в мире, кейсы","Тактический нож":"Лут в мире, кейсы","Нож Gerber":"Лут в мире, кейсы","Самурайская катана":"Лут в мире, кейсы","Секира молния":"Лут в мире, кейсы","Глушитель V1":"Лут в мире, кейсы","Стандартный глушитель":"Лут в мире, кейсы","Часть карты телепорта на данж - Скалистый №1":"Лут в мире, данж Скалистый","Часть карты телепорта на данж - Скалистый №2":"Лут в мире, данж Скалистый","Часть карты телепорта на данж - Скалистый №3":"Лут в мире, данж Скалистый","Часть карты телепорта на данж - Скалистый №4":"Лут в мире, данж Скалистый","Часть карты телепорта на данж - Лабиринт №1":"Лут в мире, данж Лабиринт","Часть карты телепорта на данж - Лабиринт №2":"Лут в мире, данж Лабиринт","Часть карты телепорта на данж - Лабиринт №3":"Лут в мире, данж Лабиринт","Часть карты телепорта на данж - Лабиринт №4":"Лут в мире, данж Лабиринт","Брусок золота":"Лут в мире, шахты, кейсы","Авокадо":"Сбор в мире, ферма","Дыня":"Сбор в мире, ферма","Клубника":"Сбор в мире, ферма","Красный картофель":"Сбор в мире, ферма","Свекла":"Сбор в мире, ферма","Баклажан":"Сбор в мире, ферма","Огурец":"Сбор в мире, ферма","Репа":"Сбор в мире, ферма","Редис":"Сбор в мире, ферма","Красный перец":"Сбор в мире, ферма","Кейс для патронов 50":"Лут в мире, кейсы","Кейс черный 50":"Лут в мире, кейсы","Медицинский кейс 50":"Лут в мире, кейсы","Экзоскелет V1":"Лут в мире, кейсы, мобы","Боевой противогаз на 2 часа":"Лут в мире, кейсы"};
 
-function renderCraftTab(){
-const el=document.getElementById("rightContent");
-el.innerHTML=buildCraftHtml();
-if(window._initCSB)window._initCSB(el);
-const wc=document.getElementById("welcomeClose");if(wc)wc.addEventListener("click",()=>{localStorage.setItem('yw_welcome_dismissed','1');const h=document.getElementById("welcomeHint");if(h)h.style.display='none'});
-}
+// renderCraftTab removed (dead code — replaced by renderAllInOne)
 
 function renderInventoryModal(){
 const el=document.getElementById("invModalBody");
@@ -1937,48 +1935,7 @@ html+=`<div class="hdd-inv-item ${sc}" data-hdd-toggle="${hddName}">
 return html;
 }
 
-function renderSuggestionsTab(){
-const el=document.getElementById("rightContent");
-const invMap=getInvMap();
-const t=state.suggestionThreshold;
-const suggestions=RECIPES.map(r=>({recipe:r,...calcSuggestion(r,invMap)}))
-.filter(s=>s.pct>=t).sort((a,b)=>b.pct-a.pct||b.satisfied-a.satisfied);
-let html=`<div class="threshold-row">
-<label>Минимум:</label>
-<input type="range" id="threshSlider" min="0" max="100" step="5" value="${t}">
-<div class="cs-slider" id="csSlider" data-min="0" data-max="100" data-step="5" data-value="${t}">
-<div class="cs-track"><div class="cs-fill" style="width:${t}%"></div><div class="cs-thumb" style="left:${t}%"></div></div>
-</div>
-<span class="val" id="threshVal">${t}%</span>
-</div>
-<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Показаны рецепты, у которых есть минимум ${t}% ресурсов. Опустите ползунок, чтобы увидеть больше.</div>
-<div style="font-size:12px;color:var(--text3);margin-bottom:12px">${suggestions.length} рецептов подходят</div>`;
-if(!suggestions.length){
-html+=`<div class="empty-state" style="height:auto;padding:40px 20px">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-<div class="title">Ничего не подходит</div>
-<div class="sub">Добавьте ресурсы в инвентарь или опустите ползунок процента</div>
-</div>`;
-} else {
-suggestions.forEach(s=>{
-const pctColor="var(--green)";
-html+=`<div class="suggestion-item" data-suggest="${s.recipe.name.replace(/"/g,"&quot;")}">
-<div class="suggestion-header">
-<span class="suggestion-name">${s.recipe.name}</span>
-<span class="suggestion-pct" style="color:${pctColor}">${s.pct}%</span>
-</div>
-<div class="progress-bar"><div class="progress-bar-fill" style="width:${s.pct}%;background:${pctColor}"></div></div>
-<div class="suggestion-ingredients">`;
-const uniqueMap=new Map();s.recipe.ingredients.forEach(i=>{uniqueMap.set(i.name,(uniqueMap.get(i.name)||0)+i.quantity)});
-uniqueMap.forEach((qty,name)=>{
-const ok=(invMap[name]||0)>=qty;
-html+=`<span class="suggestion-ing ${ok?"ok":"no"}">${ok?"\u2705":"\u274c"} ${name}</span>`;
-});
-html+=`</div></div>`;
-});
-}
-el.innerHTML=html;if(window._initCSB)window._initCSB(el);
-}
+// renderSuggestionsTab removed (dead code — replaced by buildSuggestionsHtml)
 
 function setupAutocomplete(searchId,acId){
 if(!searchId)searchId='invSearch';
@@ -2027,7 +1984,7 @@ let maxCraftable=0;if(ci){maxCraftable=ci.qty;r.ingredients.forEach(ing=>{const 
 uniqueMap.forEach((qty,ingName)=>{
 const have=invMap[ingName]||0;const ok=have>=qty;
 const pct=qty>0?Math.min(100,Math.round(have/qty*100)):0;
-const hddNames=new Set(Object.values(HARDDRIVES));const isHdd=hddNames.has(ingName);
+const isHdd=HDD_NAMES.has(ingName);
 let ingPriceVal=0;if(state.priceMode==='market'){ingPriceVal=getItemMarketPrice(ingName)}else{ingPriceVal=getItemScrapPrice(ingName)*SCRAP_VALUE}
 const ingPriceTag=ingPriceVal>0?`<span class="modal-price">${formatPrice(ingPriceVal*qty)}</span>`:'';
 ingHtml+=`<div class="modal-ingredient" data-ing-name="${ingName.replace(/"/g,"&quot;")}" data-ing-need="${qty}" data-ing-have="${have}" title="${ok?"Кликните чтобы убрать из инвентаря":"Кликните чтобы добавить в инвентарь"}">
@@ -2093,8 +2050,7 @@ const nameEl=document.getElementById(isScreen?"invSearchS":"invSearch");
 const qtyEl=document.getElementById(isScreen?"invQtyS":"invQty");
 const name=nameEl?nameEl.value.trim():"";const qty=qtyEl?parseInt(qtyEl.value)||0:0;
 if(name&&qty>0){
-const hddNames=new Set(Object.values(HARDDRIVES));
-if(hddNames.has(name)){
+if(HDD_NAMES.has(name)){
 if(!state.hddInventory.includes(name))state.hddInventory.push(name);
 }else{
 const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty+=qty;else state.inventory.push({name,qty});
@@ -2122,13 +2078,13 @@ if(invSortBtn){state.invSort=invSortBtn.dataset.invSort;saveState();render();ret
 const hddToggle=e.target.closest("[data-hdd-toggle]");
 if(hddToggle){const name=hddToggle.dataset.hddToggle;const idx=state.hddInventory.indexOf(name);if(idx>=0){state.hddInventory.splice(idx,1)}else{state.hddInventory.push(name)}saveState();render();return}
 const resPlus=e.target.closest("[data-res-plus]");
-if(resPlus){const name=resPlus.dataset.resPlus;const hddNames=new Set(Object.values(HARDDRIVES));if(hddNames.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty++;else state.inventory.push({name,qty:1})}saveState();render();return}
+if(resPlus){const name=resPlus.dataset.resPlus;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty++;else state.inventory.push({name,qty:1})}saveState();render();return}
 const resMinus=e.target.closest("[data-res-minus]");
 if(resMinus){const name=resMinus.dataset.resMinus;const ex=state.inventory.find(x=>x.name===name);if(ex){ex.qty--;if(ex.qty<=0)state.inventory=state.inventory.filter(x=>x.qty>0)}saveState();render();return}
 const resRow=e.target.closest("[data-res-name]");
-if(resRow&&!e.target.closest(".r-btn")&&!e.target.closest(".source-tip")){const name=resRow.dataset.resName;const need=parseInt(resRow.dataset.resNeed)||1;const have=parseInt(resRow.dataset.resHave)||0;const hddNames=new Set(Object.values(HARDDRIVES));if(hddNames.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();render();return}
+if(resRow&&!e.target.closest(".r-btn")&&!e.target.closest(".source-tip")){const name=resRow.dataset.resName;const need=parseInt(resRow.dataset.resNeed)||1;const have=parseInt(resRow.dataset.resHave)||0;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();render();return}
 const ingRow=e.target.closest("[data-ing-name]");
-if(ingRow){const name=ingRow.dataset.ingName;const need=parseInt(ingRow.dataset.ingNeed)||1;const have=parseInt(ingRow.dataset.ingHave)||0;const hddNames=new Set(Object.values(HARDDRIVES));if(hddNames.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();render();if(window._currentModalRecipe)openModal(window._currentModalRecipe);return}
+if(ingRow){const name=ingRow.dataset.ingName;const need=parseInt(ingRow.dataset.ingNeed)||1;const have=parseInt(ingRow.dataset.ingHave)||0;if(HDD_NAMES.has(name)){if(!state.hddInventory.includes(name))state.hddInventory.push(name);else state.hddInventory=state.hddInventory.filter(n=>n!==name)}else{if(have>=need){state.inventory=state.inventory.filter(x=>x.name!==name)}else{const ex=state.inventory.find(x=>x.name===name);if(ex)ex.qty=need;else state.inventory.push({name,qty:need})}}saveState();render();if(window._currentModalRecipe)openModal(window._currentModalRecipe);return}
 const suggest=e.target.closest("[data-suggest]");
 if(suggest){openModal(suggest.dataset.suggest);return}
 const modalAdd=e.target.closest("[data-modal-add]");
@@ -2219,9 +2175,9 @@ ov.addEventListener('mouseup',onUp);
 });
 update();
 }
-var obs=new MutationObserver(function(){init(document.getElementById('csSlider'))});
-obs.observe(document.body,{childList:true,subtree:true});
 init(document.getElementById('csSlider'));
+// Re-init custom slider after render
+window._initCSSlider=function(){init(document.getElementById('csSlider'))};
 })();
 
 // Custom Scrollbar System// Custom Scrollbar System
@@ -2295,21 +2251,17 @@ setTimeout(updateThumb,0);
 function initAll(){
 document.querySelectorAll('.left-panel,.right-content,.modal,.autocomplete-dropdown,.inv-modal-body,.inv-screen-body').forEach(function(el){initCustomScrollbar(el)});
 }
-var sbObs=new MutationObserver(function(mutations){
-mutations.forEach(function(m){
-m.addedNodes.forEach(function(n){
-if(n.nodeType===1){
-if(n.classList&&(n.classList.contains('left-panel')||n.classList.contains('right-content')||n.classList.contains('modal')||n.classList.contains('autocomplete-dropdown')||n.classList.contains('inv-modal-body')||n.classList.contains('inv-screen-body'))){initCustomScrollbar(n)}
-if(n.querySelectorAll){n.querySelectorAll('.left-panel,.right-content,.modal,.autocomplete-dropdown,.inv-modal-body,.inv-screen-body').forEach(initCustomScrollbar)}
-}
-});});});
-sbObs.observe(document.body,{childList:true,subtree:true});
+// Body-level MutationObserver removed for performance
+// Scrollbars are now initialized explicitly after render()
 window._initCSB=initCustomScrollbar;
+window._initCSBAll=initAll;
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(initAll,50)});else setTimeout(initAll,50);
 })();
 
+let _searchTimer;
 document.getElementById("search").addEventListener("input",e=>{
-state.searchQuery=e.target.value;saveState();renderGrid();renderCategories();
+clearTimeout(_searchTimer);
+_searchTimer=setTimeout(()=>{state.searchQuery=e.target.value;saveState();renderGrid();renderCategories();},120);
 });
 document.getElementById("search").addEventListener("keydown",e=>{
 if(e.key==="Escape"){e.target.value="";state.searchQuery="";saveState();renderGrid();renderCategories();e.target.blur()}
@@ -2617,8 +2569,9 @@ let items=RECIPES.filter(r=>favs.includes(r.name));
 if(state.searchQuery){const q=state.searchQuery.toLowerCase().normalize('NFC').trim();items=items.filter(r=>r.name.toLowerCase().normalize('NFC').includes(q))}
 if(!items.length){el.innerHTML='<div class="no-results">Нет избранных рецептов</div>';return}
 function pluralR(n){const m=n%10,h=n%100;if(m===1&&h!==11)return'ингредиент';if(m>=2&&m<=4&&(h<12||h>14))return'ингредиента';return'ингредиентов'}
+const _craftMap=new Map(state.craftItems.map(ci=>[ci.name,ci.qty]));
 el.innerHTML=items.map(r=>{
-const qty=(state.craftItems.find(x=>x.name===r.name)||{}).qty||0;
+const qty=_craftMap.get(r.name)||0;
 const sel=qty>0?"selected":"";
 const img=r.image?`<img src="${r.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display=''"><span class="no-img" style="display:none">📦</span>`:'<span class="no-img">📦</span>';
 return`<div class="item-card ${sel}" data-name="${r.name.replace(/"/g,"&quot;")}">
@@ -2664,8 +2617,8 @@ const haveHdd=hasHdd(recipe.category);
 const sc=getHddStatusClass(recipe.category);
 html+='<div class="ct-hdd '+sc+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>Нужен диск: '+hddName+'</span><span style="margin-left:auto;font-size:10px;color:'+(haveHdd?"var(--green)":"var(--red)")+'">'+(haveHdd?"\u2705 есть":"\u274c нет")+'</span></div>';
 }
-const subRecipes=recipe.ingredients.filter(ing=>RECIPES.some(r=>r.name===ing.name));
-const baseIngr=recipe.ingredients.filter(ing=>!RECIPES.some(r=>r.name===ing.name));
+const subRecipes=recipe.ingredients.filter(ing=>RECIPE_MAP.has(ing.name));
+const baseIngr=recipe.ingredients.filter(ing=>!RECIPE_MAP.has(ing.name));
 if(subRecipes.length){
 html+='<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Нужно скрафтить сначала:</div>';
 subRecipes.forEach(ing=>{
@@ -2711,8 +2664,8 @@ return html;
 function buildTreeInner(recipe,mult,visited){
 const invMap=getInvMap();
 let html='';
-const subRecipes=recipe.ingredients.filter(ing=>RECIPES.some(r=>r.name===ing.name));
-const baseIngr=recipe.ingredients.filter(ing=>!RECIPES.some(r=>r.name===ing.name));
+const subRecipes=recipe.ingredients.filter(ing=>RECIPE_MAP.has(ing.name));
+const baseIngr=recipe.ingredients.filter(ing=>!RECIPE_MAP.has(ing.name));
 subRecipes.forEach(ing=>{
 const subR=RECIPE_MAP.get(ing.name);
 const needQty=ing.quantity*mult;
@@ -2823,7 +2776,7 @@ const modalBody=document.querySelector("#modal .modal-body");
 if(!modalBody)return;
 
 // Add craft tree section
-const hasSubRecipes=r.ingredients.some(ing=>RECIPES.some(x=>x.name===ing.name));
+const hasSubRecipes=r.ingredients.some(ing=>RECIPE_MAP.has(ing.name));
 if(hasSubRecipes){
 const treeDiv=document.createElement("div");
 treeDiv.innerHTML='<div class="section-title" style="margin-top:12px">Из чего крафтится <span class="line"></span></div>'+buildCraftTree(r,1,new Set([r.name]));
@@ -2861,32 +2814,7 @@ if(e.target.id==="importInvBtn"||e.target.id==="importInvBtnS"){importInventory(
 // RESOURCE_SOURCES moved before renderCraftTab()
 
 // ===== FEATURE: CRAFT HISTORY =====
-function renderHistoryTab(){
-const el=document.getElementById("rightContent");
-let html=`<div class="section-title">Что вы скрафтили <span class="line"></span></div>`;
-if(!state.craftHistory.length){
-html+=`<div class="empty-state" style="height:auto;padding:40px 20px">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px;opacity:.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-<div class="title">Пока ничего не крафтили</div>
-<div class="sub">Когда вы скрафтите что-нибудь, это появится здесь с возможностью отменить</div>
-</div>`;
-} else {
-html+=`<div style="margin-bottom:8px;display:flex;justify-content:flex-end"><button id="clearHistoryBtn" style="font-size:11px;color:var(--red);background:none;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;cursor:pointer">Очистить историю</button></div>`;
-state.craftHistory.forEach((entry,idx)=>{
-const ago=timeAgo(entry.time);
-const r=RECIPE_MAP.get(entry.name);
-const img=r&&r.image?`<img loading="lazy" src="${r.image}" alt="" style="width:24px;height:24px;object-fit:contain;border-radius:3px">`:'';
-html+=`<div class="history-item">
-${img}
-<span class="hi-name">${entry.name}</span>
-<span class="hi-qty">x${entry.qty}</span>
-<span class="hi-time">${ago}</span>
-<button class="history-undo" data-undo="${idx}">Вернуть ресурсы</button>
-</div>`;
-});
-}
-el.innerHTML=html;if(window._initCSB)window._initCSB(el);
-}
+// renderHistoryTab removed (dead code — replaced by buildHistoryHtml)
 
 function timeAgo(ts){
 const diff=Date.now()-ts;
@@ -2985,12 +2913,15 @@ addRecent(name);
 _origOpenModal2(name);
 };
 
-// ===== PATCH: render to include recent + theme =====
+// ===== PATCH: render to include recent + theme + scrollbar reinit =====
 const _origRender=render;
 render=function(){
 _origRender();
 renderRecentBar();
 applyTheme();
+// Re-init scrollbars and slider after render
+if(window._initCSBAll)window._initCSBAll();
+if(window._initCSSlider)window._initCSSlider();
 };
 
 // ===== THEME TOGGLE HANDLER =====
@@ -3007,15 +2938,9 @@ if(e.target.id==="clearHistoryBtn"){state.craftHistory=[];saveState();render();r
 if(e.target.closest("[data-recent-name]")){openModal(e.target.closest("[data-recent-name]").dataset.recentName);return}
 });
 
-// ===== COPYRIGHT =====
-// Copyright protection
+// ===== COPYRIGHT (merged) =====
 (function(){
 'use strict';
-var _0x=Object.defineProperty.bind(Object);
-var _p=['toString','constructor','prototype'];
-try{if(window.devtools&&window.devtools.open)throw new Error()}catch(e){}
-var _t=setInterval(function(){
-if(window.outerWidth-window.innerWidth>200||window.outerHeight-window.innerHeight>200){}},{async:true,interval:1000});
 document.addEventListener('contextmenu',function(e){e.preventDefault();return false});
 document.addEventListener('keydown',function(e){
 if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='u')){e.preventDefault();return false}
@@ -3032,24 +2957,7 @@ if(!_ok&&_h!==''){
 document.documentElement.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#09090b;color:#f97316;font-family:system-ui;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px">&#128274;</div><div style="font-size:20px;font-weight:700">Доступ запрещён</div><div style="font-size:14px;color:#a1a1aa;margin-top:8px">Этот сайт доступен только на официальном домене.</div></div></div>';
 throw new Error('Domain lock');}
 
-// --- Block right-click ---
-document.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
-
-// --- Block DevTools shortcuts ---
-document.addEventListener('keydown',function(e){
-// F12
-if(e.keyCode===123){e.preventDefault();return false;}
-// Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
-if(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74||e.keyCode===67)){e.preventDefault();return false;}
-// Ctrl+U (view source)
-if(e.ctrlKey&&e.keyCode===85){e.preventDefault();return false;}
-// Ctrl+S (save)
-if(e.ctrlKey&&e.keyCode===83){e.preventDefault();return false;}
-// Ctrl+Shift+K (Firefox console)
-if(e.ctrlKey&&e.shiftKey&&e.keyCode===75){e.preventDefault();return false;}
-// Ctrl+Shift+E (Firefox network)
-if(e.ctrlKey&&e.shiftKey&&e.keyCode===69){e.preventDefault();return false;}
-});
+// --- Block DevTools shortcuts (duplicate removed — handled above) ---
 
 // --- DevTools detection (blur when open) ---
 var _dtO=false;
@@ -3058,13 +2966,7 @@ var el=document.querySelector('.app');
 if(!el)return;
 if(_dtO){el.classList.add('_dt-blur')}else{el.classList.remove('_dt-blur')}
 };
-// Method 1: debugger timing
-setInterval(function(){
-var t=performance.now();
-debugger;
-if(performance.now()-t>100){_dtO=true;}else{_dtO=false;}
-_dtC();
-},3000);
+// Method 1: removed debugger timing (was killing performance/battery)
 // Method 2: window size detection (outer vs inner)
 function _dtSize(){
 var w=window.outerWidth-window.innerWidth>160;
@@ -3076,7 +2978,7 @@ window.addEventListener('resize',_dtSize);
 setInterval(_dtSize,5000);
 
 // --- Block drag ---
-document.addEventListener('dragstart',function(e){e.preventDefault();return false;});
+// dragstart NOT blocked (conflicts with drag-and-drop reorder feature)
 
 // --- Block copy/cut ---
 document.addEventListener('copy',function(e){e.preventDefault();return false;});
@@ -3139,9 +3041,6 @@ render();
 });
 });
 })();
-</script>
-</body>
-<script>
 // PWA: manifest + service worker (real files)
 if('serviceWorker'in navigator){
 navigator.serviceWorker.register('./sw.js',{scope:'/yourworld-craft-calc/'}).catch(()=>{});
@@ -3159,4 +3058,5 @@ b.querySelector('#install-yes').onclick=async()=>{b.remove();if(_deferredPrompt)
 b.querySelector('#install-no').onclick=()=>{b.remove();localStorage.setItem('yw_install_dismissed','1')};
 }
 </script>
+</body>
 </html>
