@@ -686,6 +686,14 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
 .craft-item[draggable="true"]{cursor:grab}
 .craft-item.dragging{opacity:.4;transform:scale(.97)}
 .craft-item.drag-over{border-top:2px solid var(--accent)}
+.craft-item.craft-hidden{opacity:.45;border-style:dashed}
+.craft-item.craft-hidden .craft-progress{opacity:.4}
+.craft-item.craft-hidden:hover{opacity:.7}
+.craft-vis-btn,.craft-solo-btn{width:22px!important;height:22px!important;border-radius:4px!important;border:1px solid var(--bg3)!important;background:var(--bg)!important;color:var(--text3)!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:all .15s!important;padding:0!important;flex-shrink:0}
+.craft-vis-btn svg,.craft-solo-btn svg{width:12px;height:12px}
+.craft-vis-btn:hover{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.craft-solo-btn:hover{background:rgba(139,92,246,.2)!important;color:#a78bfa!important;border-color:rgba(139,92,246,.4)!important}
+.craft-item.craft-hidden .craft-vis-btn{color:var(--accent)!important;border-color:var(--accent)!important}
 
 /* ===== SOURCE TOOLTIP ===== */
 .source-tip{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(139,92,246,.1);color:#a78bfa;border:1px solid rgba(139,92,246,.2);margin-left:4px;cursor:help;position:relative}
@@ -1283,8 +1291,8 @@ return t>0?formatPrice(t*SCRAP_VALUE):'';
 const STATE_KEY="dayz_craft_calc_v2";
 let state=loadState();
 document.getElementById("search").value=state.searchQuery||'';
-function defaultState(){return{craftItems:[],inventory:[],hddInventory:[],suggestionThreshold:50,activeRightTab:"craft",activeCategory:null,searchQuery:"",craftHistory:[],recentRecipes:[],theme:"dark",priceMode:"market",invSubTab:"resources",invSort:"history",_collapsedSections:[],mobileTab:"catalog",stats:{totalCrafts:0,recipesViewed:0,sessionStart:Date.now()}}}
-function loadState(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY));if(!s||!s.craftItems)return defaultState();if(s.activeCategory&&!RECIPES.some(r=>r.category===s.activeCategory))s.activeCategory=null;if(typeof s.searchQuery!=='string')s.searchQuery='';if(s.activeRightTab!=='craft'&&s.activeRightTab!=='suggestions'&&s.activeRightTab!=='inventory'&&s.activeRightTab!=='history')s.activeRightTab='craft';if(s.mobileTab!=='catalog'&&s.mobileTab!=='craft'&&s.mobileTab!=='inventory')s.mobileTab='catalog';if(!Array.isArray(s.craftHistory))s.craftHistory=[];if(!Array.isArray(s.recentRecipes))s.recentRecipes=[];if(typeof s.theme!=='string')s.theme='dark';if(s.priceMode!=='scrap'&&s.priceMode!=='market')s.priceMode='market';if(!Array.isArray(s.hddInventory))s.hddInventory=[];else s.hddInventory=s.hddInventory.map(x=>typeof x==='object'?x.name:x).filter(Boolean);if(typeof s.invSubTab!=='string')s.invSubTab='resources';if(typeof s.invSort!=='string'||(s.invSort!=='history'&&s.invSort!=='alpha'))s.invSort='history';if(!Array.isArray(s._collapsedSections))s._collapsedSections=[];if(!s.stats||typeof s.stats!=='object')s.stats={totalCrafts:0,recipesViewed:0,sessionStart:Date.now()};if(typeof s.stats.totalCrafts!=='number')s.stats.totalCrafts=0;if(typeof s.stats.recipesViewed!=='number')s.stats.recipesViewed=0;if(!s.stats.sessionStart)s.stats.sessionStart=Date.now();return s}catch(e){return defaultState()}}
+function defaultState(){return{craftItems:[],inventory:[],hddInventory:[],suggestionThreshold:50,activeRightTab:"craft",activeCategory:null,searchQuery:"",craftHistory:[],recentRecipes:[],theme:"dark",priceMode:"market",invSubTab:"resources",invSort:"history",_collapsedSections:[],hiddenCraft:[],mobileTab:"catalog",stats:{totalCrafts:0,recipesViewed:0,sessionStart:Date.now()}}}
+function loadState(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY));if(!s||!s.craftItems)return defaultState();if(s.activeCategory&&!RECIPES.some(r=>r.category===s.activeCategory))s.activeCategory=null;if(typeof s.searchQuery!=='string')s.searchQuery='';if(s.activeRightTab!=='craft'&&s.activeRightTab!=='suggestions'&&s.activeRightTab!=='inventory'&&s.activeRightTab!=='history')s.activeRightTab='craft';if(s.mobileTab!=='catalog'&&s.mobileTab!=='craft'&&s.mobileTab!=='inventory')s.mobileTab='catalog';if(!Array.isArray(s.craftHistory))s.craftHistory=[];if(!Array.isArray(s.recentRecipes))s.recentRecipes=[];if(typeof s.theme!=='string')s.theme='dark';if(s.priceMode!=='scrap'&&s.priceMode!=='market')s.priceMode='market';if(!Array.isArray(s.hddInventory))s.hddInventory=[];else s.hddInventory=s.hddInventory.map(x=>typeof x==='object'?x.name:x).filter(Boolean);if(typeof s.invSubTab!=='string')s.invSubTab='resources';if(typeof s.invSort!=='string'||(s.invSort!=='history'&&s.invSort!=='alpha'))s.invSort='history';if(!Array.isArray(s._collapsedSections))s._collapsedSections=[];if(!Array.isArray(s.hiddenCraft))s.hiddenCraft=[];else s.hiddenCraft=s.hiddenCraft.filter(n=>s.craftItems.some(c=>c.name===n));if(!s.stats||typeof s.stats!=='object')s.stats={totalCrafts:0,recipesViewed:0,sessionStart:Date.now()};if(typeof s.stats.totalCrafts!=='number')s.stats.totalCrafts=0;if(typeof s.stats.recipesViewed!=='number')s.stats.recipesViewed=0;if(!s.stats.sessionStart)s.stats.sessionStart=Date.now();return s}catch(e){return defaultState()}}
 function saveState(){state._invVer=(state._invVer||0)+1;localStorage.setItem(STATE_KEY,JSON.stringify(state))}
 
 // ===== RESOURCE CALCULATIONS =====
@@ -1296,6 +1304,10 @@ function getHddStatusClass(category){if(!HARDDRIVES[category])return'base';retur
 function getAggregatedResources(){
 const m={};
 state.craftItems.forEach(ci=>{const r=RECIPE_MAP.get(ci.name);if(!r)return;
+r.ingredients.forEach(ing=>{m[ing.name]=(m[ing.name]||0)+ing.quantity*ci.qty})});return m}
+function getAggregatedResourcesVisible(){
+const m={};const hidden=state.hiddenCraft||[];
+state.craftItems.forEach(ci=>{if(hidden.includes(ci.name))return;const r=RECIPE_MAP.get(ci.name);if(!r)return;
 r.ingredients.forEach(ing=>{m[ing.name]=(m[ing.name]||0)+ing.quantity*ci.qty})});return m}
 
 function calcSuggestion(recipe,invMap){
@@ -1309,7 +1321,7 @@ let acIndex=-1;
 // ===== CRAFT LIST SHARING =====
 function generateCraftText(){
 const invMap=getInvMap();
-const agg=getAggregatedResources();
+const agg=getAggregatedResourcesVisible();
 const missing=Object.entries(agg).filter(([name,needed])=>(invMap[name]||0)<needed).sort((a,b)=>b[1]-a[1]);
 if(!missing.length)return'Всё есть — крафть!\n\nКрафт-калькулятор YourWorld — rozegmor.github.io/yourworld-craft-calc';
 let missingTotal=0;
@@ -1640,8 +1652,11 @@ return`${welcomeHtml}<div class="empty-state">
 </div>`;
 }
 const invMap=getInvMap();
-const agg=getAggregatedResources();
-let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text3)">${state.craftItems.length} в списке</span><div class="share-btns"><button class="share-btn" id="copyCraftBtn" title="Скопировать список крафта"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Скопировать</button><button class="share-btn" id="downloadCraftBtn" title="Скачать список крафта как файл"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Скачать</button><button id="clearCraftBtn" style="font-size:11px;color:var(--red);background:none;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all .15s">Очистить</button></div></div>`;
+const agg=getAggregatedResourcesVisible();
+const hidden=state.hiddenCraft||[];
+const visibleCount=state.craftItems.length-hidden.filter(n=>state.craftItems.some(c=>c.name===n)).length;
+const hiddenCount=state.craftItems.length-visibleCount;
+let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--text3)">${state.craftItems.length} в списке${hiddenCount>0?` <span style="color:var(--accent)">(${hiddenCount} скрыто)</span>`:''}</span><div class="share-btns">${hiddenCount>0?`<button class="share-btn" id="showAllCraftBtn" title="Показать все скрытые предметы"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Показать все</button>`:''}<button class="share-btn" id="copyCraftBtn" title="Скопировать список крафта"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Скопировать</button><button class="share-btn" id="downloadCraftBtn" title="Скачать список крафта как файл"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Скачать</button><button id="clearCraftBtn" style="font-size:11px;color:var(--red);background:none;border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;cursor:pointer;transition:all .15s">Очистить</button></div></div>`;
 const totalScrap=getCraftTotalPrice();
 if(totalScrap>0){html+=`<div class="craft-total-price"><span class="ctp-label">Общая стоимость</span><span class="ctp-value">${_scrapSvg}${formatCraftTotal()}</span></div>`}
 // HDD info
@@ -1650,6 +1665,7 @@ if(hddNeeded.size){const hddItems=[...hddNeeded.entries()].map(([name,has])=>`<s
 state.craftItems.forEach((ci,idx)=>{
 const r=RECIPE_MAP.get(ci.name);
 if(!r)return;
+const isHidden=hidden.includes(ci.name);
 const img=r.image?`<img loading="lazy" src="${r.image}" alt="">`:'';
 const escName=r.name.replace(/"/g,"&quot;");
 const invMap2=getInvMap();
@@ -1657,13 +1673,17 @@ const uniqueMap=new Map();r.ingredients.forEach(i=>{uniqueMap.set(i.name,(unique
 let haveAll=0,totalAll=0;uniqueMap.forEach((qty,name)=>{const have=invMap2[name]||0;haveAll+=Math.min(have,qty);totalAll+=qty});
 const pct=totalAll?Math.round(haveAll/totalAll*100):0;
 const pctClass=pct>=100?"full":pct>=50?"partial":"low";
-html+=`<div class="craft-item" draggable="true" data-craft-idx="${idx}">
+const eyeIcon=isHidden?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const soloIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
+html+=`<div class="craft-item${isHidden?' craft-hidden':''}" draggable="true" data-craft-idx="${idx}">
 <div class="craft-item-img">${img}</div>
 <div class="craft-item-info"><div class="craft-item-name" title="${escName}">${r.name}${formatItemPrice(r.name)?` <span class="price-tag price-sm">${state.priceMode==='market'?formatPrice(getItemMarketPrice(r.name)*ci.qty):formatPrice(getItemScrapPrice(r.name)*ci.qty*SCRAP_VALUE)}</span>`:""}</div>
 <div class="craft-progress" title="Насколько хватает ресурсов: ${pct}%"><div class="craft-progress-fill ${pctClass}" style="width:${pct}%"></div></div>
 <div class="craft-pct">${pct}% есть</div>
 </div>
 <div class="craft-item-controls">
+<button class="craft-vis-btn" data-craft-toggle="${escName}" title="${isHidden?'Показать ресурсы этого предмета':'Скрыть ресурсы этого предмета'}">${eyeIcon}</button>
+<button class="craft-solo-btn" data-craft-solo="${escName}" title="Показать только этот предмет">${soloIcon}</button>
 <button data-craft-minus="${idx}">\u2212</button>
 <span>${ci.qty}</span>
 <button data-craft-plus="${idx}">+</button>
@@ -1698,6 +1718,7 @@ ${ok?`<span class="r-hint">в инвентаре</span>`:''}
 const canCraftList=[];
 const cantCraftList=[];
 state.craftItems.forEach(ci=>{
+if(hidden.includes(ci.name))return;
 const r=RECIPE_MAP.get(ci.name);if(!r)return;
 let maxCraftable=ci.qty;
 r.ingredients.forEach(ing=>{
@@ -2027,7 +2048,13 @@ if(minus){const i=+minus.dataset.craftMinus;if(state.craftItems[i].qty>1)state.c
 const plus=e.target.closest("[data-craft-plus]");
 if(plus){state.craftItems[+plus.dataset.craftPlus].qty++;saveState();render();return}
 const rem=e.target.closest("[data-craft-remove]");
-if(rem){state.craftItems.splice(+rem.dataset.craftRemove,1);saveState();render();return}
+if(rem){const removed=state.craftItems.splice(+rem.dataset.craftRemove,1);if(removed.length&&state.hiddenCraft){state.hiddenCraft=state.hiddenCraft.filter(n=>n!==removed[0].name)}saveState();render();return}
+const toggleVis=e.target.closest("[data-craft-toggle]");
+if(toggleVis){const name=toggleVis.dataset.craftToggle;if(!state.hiddenCraft)state.hiddenCraft=[];const idx=state.hiddenCraft.indexOf(name);if(idx>=0)state.hiddenCraft.splice(idx,1);else state.hiddenCraft.push(name);saveState();render();return}
+const soloVis=e.target.closest("[data-craft-solo]");
+if(soloVis){const name=soloVis.dataset.craftSolo;if(!state.hiddenCraft)state.hiddenCraft=[];const allNames=state.craftItems.map(c=>c.name).filter(n=>n!==name);state.hiddenCraft=allNames;saveState();render();return}
+const showAllBtn=document.getElementById("showAllCraftBtn");
+if(e.target===showAllBtn||e.target.closest("#showAllCraftBtn")){state.hiddenCraft=[];saveState();render();return}
 const invAddBtn=document.getElementById("invAddBtn")||document.getElementById("invAddBtnS");
 const invAddBtnS=document.getElementById("invAddBtnS");
 if(e.target===invAddBtn||e.target===invAddBtnS){
@@ -2046,7 +2073,7 @@ saveState();render();
 return;
 }
 const clearCraftBtn=document.getElementById("clearCraftBtn");
-if(e.target===clearCraftBtn){state.craftItems=[];saveState();render();return}
+if(e.target===clearCraftBtn){state.craftItems=[];state.hiddenCraft=[];saveState();render();return}
 const copyCraftBtn=document.getElementById("copyCraftBtn");
 if(e.target===copyCraftBtn||e.target.closest("#copyCraftBtn")){copyCraftList();return}
 const downloadCraftBtn=document.getElementById("downloadCraftBtn");
